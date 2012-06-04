@@ -7,7 +7,7 @@ struct Node;										//forward declaration
 
 struct Link{
 	Node* target;
-	float weight;									//TODO distance?
+	float weight;
 	__host__ __device__ Link(){
 		target=NULL;
 		weight=0;

@@ -41,19 +41,17 @@ struct Node {
 	 * 	Create a node that is NOT the first of the graph and add it to the nodes array. Node creation can be done in parallel.
 	 */
 
-	__device__ static void addNode(unsigned int id, float x, float y, NodeResource nr, Node* node_array_dev, Link* link_array_dev){
+	__device__ static void addNode(unsigned int id, float x, float y, NodeResource nr){
 		Node node(id,x,y,nr);
-		node_array_dev[id]=node;
+		nodes_dev_array[id]=node;
 		Node* neighbour;
 		if(id!=0){
-			neighbour=&node_array_dev[id-1];
-			link_array_dev[id*max_links_number].target=neighbour;											// first neighbour is assigned to connect the node to the net. It is the the previous node on the nodes array.
-			link_array_dev[id*max_links_number].weight=node.calculateDistance(neighbour->x,neighbour->y);
+			neighbour=&nodes_dev_array[id-1];
+			links_dev_array[id*max_links_number].target=neighbour;											// first neighbour is assigned to connect the node to the net. It is the the previous node on the nodes array.
+			links_dev_array[id*max_links_number].weight=node.calculateDistance(neighbour->x,neighbour->y);
 		}
 	}
-	/*
-	 * Establish a new link TODO: controllare se può essere inline (perché c'è il while)
-	 */
+
 	__device__ bool addLink(Node* trg, float distance);
 	/*
 	__device__ message_t readMessage();				// da implementare qui per essere inline

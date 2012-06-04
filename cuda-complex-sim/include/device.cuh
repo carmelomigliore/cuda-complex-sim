@@ -54,6 +54,22 @@ __host__ bool allocateDataStructures(Node** nodes_dev_array, Link** links_dev_ar
 	return true;
 }
 
+/*
+ * Create the first two nodes of the graph and connect them to each other
+ */
+
+__device__ void initGraph(float x0, float y0, NodeResource nr0,float x1,float y1, NodeResource nr1 ){
+	Node node0(0,x0,y0,nr0);
+	Node node1(1,x1,y1,nr1);
+	nodes_dev_array[0]=node0;
+	nodes_dev_array[1]=node1;
+	links_dev_array[0].target=&nodes_dev_array[1];
+	links_dev_array[0].weight=node0.calculateDistance(node1.x,node1.y);
+	links_dev_array[max_links_number].target=&nodes_dev_array[0];   						//In this case links_dev_array's index should be 1*max_links_numbers but we omitted it
+	links_dev_array[max_links_number].weight=node1.calculateDistance(node0.x,node0.y);
+
+}
+
 
 
 #endif /* DEVICE_CUH_ */
