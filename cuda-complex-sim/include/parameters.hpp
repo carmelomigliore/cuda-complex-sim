@@ -21,20 +21,23 @@
 
 #include <stdint.h>
 
-
-struct Node;
-struct Link;
-struct Message;
+/* Global constants */
 
 __constant__ uint32_t max_nodes_number;
 __constant__ uint8_t max_links_number;
 __constant__ uint32_t active_nodes_array_size;
-__constant__ uint8_t message_buffer_size;
-__constant__ Node* nodes_dev_array;
-__constant__ Link* links_dev_array;
-__constant__ Message* message_dev_array;
+//__constant__ uint8_t message_buffer_size;    TODO aggiungere anche il cudamemcpytosymbol
 
+/* Nodes arrays addresses */
 
-//TODO: add others array pointers.
+__constant__ bool* nodes_array;
+__constant__ float* nodes_coord_x_array;
+__constant__ float* nodes_coord_y_array;
+
+/* Links arrays addresse */
+
+__constant__ int32_t* links_targets_array;  //node's id is signed
+__constant__ float* links_weights_array;
+
 
 #endif /* PARAMETERS_HPP_ */

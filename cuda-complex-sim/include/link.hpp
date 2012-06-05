@@ -19,21 +19,25 @@
 #ifndef LINK_HPP_
 #define LINK_HPP_
 
-#include <stddef.h>
+#include <stdint.h>
 
-struct Node;										//forward declaration
+#include "parameters.hpp"
 
-struct Link{
-	Node* target;
-	float weight;
-	__host__ __device__ Link(){
-		target=NULL;
-		weight=0;
-	}
-	__host__ __device__ Link(Node* tar, float w)
+__device__ inline bool addLink(int32_t source_id, int32_t target_id, float weight)
+{
+	uint8_t i=0;
+	while(i<max_links_number)
 	{
-		target=tar;
-		weight=w;								//link's weight is the Euclidean distance between a node and its neighbour
+		if(links_targets_array[source_id*max_links_number+i]==-1){
+			links_targets_array[source_id*max_links_number+i]=target_id;
+			links_weights_array[source_id*max_links_number+i]=weight;
+			return true;
+		}
 	}
-};
+	return false;
+}
+
+
+
 #endif /* LINK_HPP_ */
+
