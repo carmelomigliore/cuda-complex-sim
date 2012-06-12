@@ -23,7 +23,12 @@
 
 #include "parameters.hpp"
 
-__device__ inline bool addLink(int32_t source_id, int32_t target_id, float weight, intptr_t* targets_array, float* weights_array)
+/*
+ * Add a new link between a source node and a target node.
+ * To be used ONLY after neighboors array has been copied in a tile in shared memory.
+ */
+
+__device__ inline bool addLink(int32_t source_id, int32_t target_id, float weight, intptr_t* neighboors_tile, float* weights_tile)
 {
 	uint8_t i;
 
@@ -31,9 +36,9 @@ __device__ inline bool addLink(int32_t source_id, int32_t target_id, float weigh
 
 	for(i=0;i<max_links_number;i++){
 
-		if(targets_array[threadIdx.x*max_links_number+i]==-1){
-			targets_array[threadIdx.x*max_links_number+i]=target_id;
-			weights_array[threadIdx.x*max_links_number+i]=weight;
+		if(neighboors_tile[threadIdx.x*max_links_number+i]==-1){
+			neighboors_tile[threadIdx.x*max_links_number+i]=target_id;
+			weights_tile[threadIdx.x*max_links_number+i]=weight;
 			return true;
 		}
 	}

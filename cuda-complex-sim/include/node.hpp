@@ -32,9 +32,9 @@
 	 * Calculate Euclidean distance of the node from the given coordinates (uses intrinsics functions)
 	 */
 
-	__device__ inline float calculateDistance(float2 c1, float2 c2){
-		return __fsqrt_rn(__powf(c2.x-c1.x,2)+__powf(c2.y-c1.y,2));
-	}
+__device__ inline float calculateDistance(float2 c1, float2 c2){
+	return __fsqrt_rn(__powf(c2.x-c1.x,2)+__powf(c2.y-c1.y,2));
+}
 
 
 
