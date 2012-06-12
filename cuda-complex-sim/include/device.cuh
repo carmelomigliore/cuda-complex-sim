@@ -23,7 +23,6 @@
 #include <stdint.h>
 
 #include "node.hpp"
-#include "node_resource.hpp"
 #include "link.hpp"
 #include "parameters.hpp"
 #include "message.hpp"
@@ -36,35 +35,31 @@ using namespace std;
  */
 
 
-__host__ bool allocateDataStructures(bool* nodes, float* nodes_x, float* nodes_y, int32_t* links_target, float* links_weight, int32_t* actives, uint32_t max_nodes, uint8_t max_links, uint32_t active_size){
+__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, int32_t** links_target_dev, float** links_weight_dev, int32_t** actives_dev, uint32_t max_nodes, uint8_t max_links, uint32_t active_size){
 
 	/* allocate nodes array */
 
-	if(cudaMalloc((void**)&nodes,max_nodes*sizeof(bool))!=cudaSuccess){
+	if(cudaMalloc((void**)nodes_dev,max_nodes*sizeof(bool))!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMalloc((void**)&nodes_x,max_nodes*sizeof(float))!=cudaSuccess){
+	if(cudaMalloc((void**)nodes_coord_dev,max_nodes*sizeof(float2))!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device";
 			return false;
-	}
-	if(cudaMalloc((void**)&nodes_y,max_nodes*sizeof(float))!=cudaSuccess){
-				cerr << "\nCouldn't allocate memory on device";
-				return false;
 	}
 
 
 	/* allocate links arrays */
 
-	if(cudaMalloc((void**)&links_target, max_nodes*max_links*sizeof(int32_t))!=cudaSuccess){
+	if(cudaMalloc((void**)links_target_dev, max_nodes*max_links*sizeof(intptr_t))!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMalloc((void**)&links_weight, max_nodes*max_links*sizeof(float))!=cudaSuccess){
+	if(cudaMalloc((void**)links_weight_dev, max_nodes*max_links*sizeof(float))!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device";
 			return false;
 	}
-	if(cudaMalloc((void**)&actives, active_size*sizeof(int32_t))!=cudaSuccess){
+	if(cudaMalloc((void**)actives_dev, active_size*sizeof(int32_t))!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
@@ -88,29 +83,61 @@ __host__ bool allocateDataStructures(bool* nodes, float* nodes_x, float* nodes_y
 
 	/* copy arrays' addresses to device memory */
 
-	if(cudaMemcpyToSymbol(nodes_array, &nodes, sizeof(bool*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	if(cudaMemcpyToSymbol(nodes_array, &nodes_dev, sizeof(bool*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMemcpyToSymbol(nodes_coord_x_array, &nodes_x, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	if(cudaMemcpyToSymbol(nodes_coord_array, &nodes_coord_dev, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMemcpyToSymbol(nodes_coord_y_array, &nodes_y, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	if(cudaMemcpyToSymbol(links_targets_array, &links_target_dev, sizeof(intptr_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMemcpyToSymbol(links_targets_array, &links_target, sizeof(int32_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
-		cerr << "\nCouldn't allocate memory on device";
-		return false;
-	}
-	if(cudaMemcpyToSymbol(links_weights_array, &links_weight, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	if(cudaMemcpyToSymbol(links_weights_array, &links_weight_dev, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
 
 	/* Success! */
 	return true;
+}
+
+
+
+template <typename T>
+__device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimension){
+	uint32_t tid=threadIdx.x + blockIdx.x*blockDim.x;
+	#pragma unroll
+	while(tid<arrayDimension){
+		devArray[tid]=initValue;
+		tid+=gridDim.x*gridDim.y*gridDim.z*blockDim.x*blockDim.y*blockDim.z; //increments by the number of total threads
+	}
+};
+
+
+/*
+ * Used to copy a piece of an array into a tile (can be used to copy from or to SHARED memory)
+ */
+
+template <typename T>
+__device__ inline void copyToTile(T* source, T* tile, uint16_t offset){
+	uint32_t tid=threadIdx.x;
+	#pragma unroll
+	while(tid<offset){
+		tile[tid]=source[tid];					//TODO verificare se è più veloce il while oppure memcpy
+		tid+=blockDim.x*blockDim.y*blockDim.z;	//increments by the number of threads per block
+	}
+};
+
+
+__global__ void test (){
+	uint32_t tid = threadIdx.x + blockIdx.x*blockDim.x;
+	float2 coord;
+	coord.x=tid*3;
+	coord.y=tid*7;
+	addNode(tid,coord);
 }
 
 #endif /* DEVICE_CUH_ */

@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 
+
 #include "math.h"
 #include "parameters.hpp"
 #include "node_resource.hpp"
@@ -28,39 +29,33 @@
 
 
 	/*
-	 * Calculate Euclidean distance of the node from the given coordinates
+	 * Calculate Euclidean distance of the node from the given coordinates (uses intrinsics functions)
 	 */
 
-	__device__ inline float calculateDistance(float x1, float y1, float x2, float y2){
-		return sqrtf(powf(x2-x1,2)+powf(y2-y1,2));
+	__device__ inline float calculateDistance(float2 c1, float2 c2){
+		return __fsqrt_rn(__powf(c2.x-c1.x,2)+__powf(c2.y-c1.y,2));
 	}
 
-	/*
-	 * Create the FIRST TWO nodes of the graph and connect them to each other
-	 */
 
-	__device__ inline void  initGraph(float x0, float y0, float x1,float y1){
-		nodes_array[0]=true;
-		nodes_array[1]=true;
-		nodes_coord_x_array[0]=x0;
-		nodes_coord_y_array[0]=y0;
-		nodes_coord_x_array[1]=x1;
-		nodes_coord_y_array[1]=y1;
-		links_targets_array[0]=1;
-		links_targets_array[1*max_links_number]=0;
-		links_weights_array[0]=links_weights_array[1*max_links_number]= calculateDistance(x0,y0,x1,y1);
-	}
 
 	/*
-	 * 	Create a node that is NOT the first of the graph (id MUST be >0) and add it to the nodes array. Node creation can be done in parallel.
+	 * 	Create a node and add it to the nodes array. Node creation can be done in parallel.
 	 */
 
- __device__ inline void addNode(int32_t id, float x, float y){
+ __device__ inline void addNode(int32_t id, float2 coord){  //TODO la lista dei nodi deve essere costruita in modo ordinato (i vicini devono essere vicini anche come indici)
 	 nodes_array[id]=true;
-	 nodes_coord_x_array[id]=x;
-	 nodes_coord_y_array[id]=y;
-	 links_targets_array[id*max_links_number]=id-1;
-	 links_weights_array[id*max_links_number]=calculateDistance(x,y,nodes_coord_x_array[id-1],nodes_coord_y_array[id-1]);
-	}
+	 nodes_coord_array[id]=coord;
+	 __syncthreads();
+	 if(id==0)
+	 {
+		 links_targets_array[id*max_links_number]=1;
+		 links_weights_array[id*max_links_number]=calculateDistance(coord,nodes_coord_array[1]);
+	 }
+	 else
+	 {
+		 links_targets_array[id*max_links_number]=id-1;
+		 links_weights_array[id*max_links_number]=calculateDistance(coord,nodes_coord_array[id-1]);
+	 }
+ }
 
 #endif /* NODES_HPP_ */

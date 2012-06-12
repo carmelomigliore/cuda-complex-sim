@@ -23,19 +23,25 @@
 
 #include "parameters.hpp"
 
-__device__ inline bool addLink(int32_t source_id, int32_t target_id, float weight)
+__device__ inline bool addLink(int32_t source_id, int32_t target_id, float weight, intptr_t* targets_array, float* weights_array)
 {
-	uint8_t i=0;
-	while(i<max_links_number)
-	{
-		if(links_targets_array[source_id*max_links_number+i]==-1){
-			links_targets_array[source_id*max_links_number+i]=target_id;
-			links_weights_array[source_id*max_links_number+i]=weight;
+	uint8_t i;
+
+	#pragma unroll
+
+	for(i=0;i<max_links_number;i++){
+
+		if(targets_array[threadIdx.x*max_links_number+i]==-1){
+			targets_array[threadIdx.x*max_links_number+i]=target_id;
+			weights_array[threadIdx.x*max_links_number+i]=weight;
 			return true;
 		}
 	}
 	return false;
 }
+
+
+
 
 
 
