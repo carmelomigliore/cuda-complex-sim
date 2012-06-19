@@ -26,10 +26,10 @@ int main(){
 	float* links_weight_dev;
 	int32_t* actives_dev;
 	uint32_t max_nodes=100000;
-	uint8_t max_links=5;
+	uint8_t average_links=5;
 	uint32_t active_size=1000;
 
-	allocateDataStructures(&nodes_dev, &nodes_coord_dev, &links_target_dev, &links_weight_dev, &actives_dev, max_nodes,max_links, active_size);
+	allocateDataStructures(&nodes_dev, &nodes_coord_dev, &links_target_dev, &links_weight_dev, &actives_dev, max_nodes,average_links, active_size);
 
 	test<<<10,10>>>();
 }

@@ -35,7 +35,7 @@ using namespace std;
  */
 
 
-__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, int32_t** links_target_dev, float** links_weight_dev, int32_t** actives_dev, uint32_t max_nodes, uint8_t max_links, uint32_t active_size){
+__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, int32_t** links_target_dev, float** links_weight_dev, int32_t** actives_dev, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size){
 
 	/* allocate nodes array */
 
@@ -51,11 +51,11 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 
 	/* allocate links arrays */
 
-	if(cudaMalloc((void**)links_target_dev, max_nodes*max_links*sizeof(intptr_t))!=cudaSuccess){
+	if(cudaMalloc((void**)links_target_dev, max_nodes*avg_links*sizeof(intptr_t))!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMalloc((void**)links_weight_dev, max_nodes*max_links*sizeof(float))!=cudaSuccess){
+	if(cudaMalloc((void**)links_weight_dev, max_nodes*avg_links*sizeof(float))!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device";
 			return false;
 	}
@@ -71,7 +71,7 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMemcpyToSymbol(max_links_number, &max_links, sizeof(uint8_t),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	if(cudaMemcpyToSymbol(average_links_number, &avg_links, sizeof(uint8_t),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
