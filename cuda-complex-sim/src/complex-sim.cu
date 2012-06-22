@@ -32,4 +32,5 @@ int main(){
 	allocateDataStructures(&nodes_dev, &nodes_coord_dev, &links_target_dev, &links_weight_dev, &actives_dev, max_nodes,average_links, active_size);
 
 	test<<<10,10>>>();
+	cudaThreadExit();
 }
