@@ -35,18 +35,21 @@ __device__ inline bool addLink(int32_t source_id, int32_t target_id, float weigh
 	#pragma unroll
 
 	for(i=0;i<average_links_number;i++){
-		if(neighbors_tile[threadIdx.x*average_links_number+i]==-1){
+		if(neighbors_tile[threadIdx.x*average_links_number+i]==-1)		//there is no need to allocate supplementary space
+			{
 			neighbors_tile[threadIdx.x*average_links_number+i]=target_id;
 			weights_tile[threadIdx.x*average_links_number+i]=weight;
 			return true;
 		}
 	}
+
+
 	intptr_t* temp;
 	float* tmpweight;
 	if(neighbors_tile[threadIdx.x*average_links_number+i-3]!=-2)		//supplementary space has not been allocated yet
 	{
-		temp = (intptr_t*)malloc(200*sizeof(intptr_t));
-		tmpweight = (float*)malloc(200*sizeof(float*));
+		temp = (intptr_t*)malloc(supplementary_links_array_size*sizeof(intptr_t));
+		tmpweight = (float*)malloc(supplementary_links_array_size*sizeof(float*));
 		temp[0]=neighbors_tile[threadIdx.x*average_links_number+i-3];
 		temp[1]=neighbors_tile[threadIdx.x*average_links_number+i-2];
 		temp[2]=neighbors_tile[threadIdx.x*average_links_number+i-1];
@@ -57,17 +60,17 @@ __device__ inline bool addLink(int32_t source_id, int32_t target_id, float weigh
 		tmpweight[3]=weight;
 
 		neighbors_tile[threadIdx.x*average_links_number+i-1]=(intptr_t)temp;   		// supplementary neighbors pointer is stored in last position
-		neighbors_tile[threadIdx.x*average_links_number+i-2]=(intptr_t)tmpweight;		// supplementary weights pointer is stored in second last position
-		neighbors_tile[threadIdx.x*average_links_number+i-3]= -2;		 	//-2 is the marker that tell us that this node has allocated space for its neighbors list
+		neighbors_tile[threadIdx.x*average_links_number+i-2]=(intptr_t)tmpweight;	// supplementary weights pointer is stored in second last position
+		neighbors_tile[threadIdx.x*average_links_number+i-3]= -2;		 			//-2 is the marker that tell us that this node has allocated space for its neighbors list
 		return true;
 	}
-	else  //supplementary space has been allocated previously
+	else  								//supplementary space has been allocated previously
 	{
 		temp=(intptr_t*)neighbors_tile[threadIdx.x*average_links_number+i-1];
 		tmpweight=(float*)neighbors_tile[threadIdx.x*average_links_number+i-2];
 
 		#pragma unroll
-		for(i=0;i<200;i++)
+		for(i=0;i<supplementary_links_array_size;i++)
 		{
 			if(temp[i]!=-1)
 			{

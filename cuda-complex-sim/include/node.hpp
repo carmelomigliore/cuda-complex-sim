@@ -36,8 +36,6 @@ __device__ inline float calculateDistance(float2 c1, float2 c2){
 	return __fsqrt_rn(__powf(c2.x-c1.x,2)+__powf(c2.y-c1.y,2));
 }
 
-
-
 	/*
 	 * 	Create a node and add it to the nodes array. Node creation can be done in parallel.
 	 */
@@ -46,15 +44,16 @@ __device__ inline float calculateDistance(float2 c1, float2 c2){
 	 nodes_array[id]=true;
 	 nodes_coord_array[id]=coord;
 	 __syncthreads();
-	 if(id==0)
-	 {
-		 links_targets_array[id*average_links_number]=1;
-		 links_weights_array[id*average_links_number]=calculateDistance(coord,nodes_coord_array[1]);
-	 }
-	 else
+
+	 if(id!=0)
 	 {
 		 links_targets_array[id*average_links_number]=id-1;
 		 links_weights_array[id*average_links_number]=calculateDistance(coord,nodes_coord_array[id-1]);
+	 }
+	 else
+	 {
+		 links_targets_array[id*average_links_number]=1;
+		 links_weights_array[id*average_links_number]=calculateDistance(coord,nodes_coord_array[1]);
 	 }
  }
 

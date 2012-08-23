@@ -135,11 +135,13 @@ __device__ inline void copyToTile(T* source, T* tile, uint16_t offset){
 
 __global__ void test (){
 	uint32_t tid = threadIdx.x + blockIdx.x*blockDim.x;
-	printf("Nodo n° %d creato\n", tid);
 	float2 coord;
+
 	coord.x=tid*3;
 	coord.y=tid*7;
+	initArray<bool>(false,nodes_array,100000);
 	addNode(tid,coord);
+	printf("Nodo n° %d creato\n", tid);
 }
 
 #endif /* DEVICE_CUH_ */
