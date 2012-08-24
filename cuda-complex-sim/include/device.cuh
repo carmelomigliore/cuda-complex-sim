@@ -84,19 +84,21 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 
 	/* copy arrays' addresses to device memory */
 
-	if(cudaMemcpyToSymbol(nodes_array, &nodes_dev, sizeof(bool*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	if(cudaMemcpyToSymbol(nodes_array, nodes_dev, sizeof(bool*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMemcpyToSymbol(nodes_coord_array, &nodes_coord_dev, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	printf("Nodes_mall: %x, Coord_mall: %x", nodes_dev, nodes_coord_dev);
+
+	if(cudaMemcpyToSymbol(nodes_coord_array, nodes_coord_dev, sizeof(float2*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMemcpyToSymbol(links_targets_array, &links_target_dev, sizeof(intptr_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	if(cudaMemcpyToSymbol(links_targets_array, links_target_dev, sizeof(intptr_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMemcpyToSymbol(links_weights_array, &links_weight_dev, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	if(cudaMemcpyToSymbol(links_weights_array, links_weight_dev, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
@@ -123,25 +125,53 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
  */
 
 template <typename T>
-__device__ inline void copyToTile(T* source, T* tile, uint16_t offset){
+__device__ inline void copyToTile(T* source, T* tile, uint16_t start, uint16_t end){
 	uint32_t tid=threadIdx.x;
+	uint8_t i =0;
 	#pragma unroll
-	while(tid<offset){
-		tile[tid]=source[tid];					//TODO verificare se è più veloce il while oppure memcpy
-		tid+=blockDim.x*blockDim.y*blockDim.z;	//increments by the number of threads per block
+	while(i<(end-start)){
+		tile[tid*(end-start)+i]=source[start+i];					//TODO verificare se è più veloce il while oppure memcpy
+		i++;
 	}
 };
 
 
 __global__ void test (){
-	uint32_t tid = threadIdx.x + blockIdx.x*blockDim.x;
-	float2 coord;
 
+	uint32_t tid = threadIdx.x + blockIdx.x*blockDim.x;
+	if(tid==0)
+	{
+		printf("\nNodes: %x, Coord: %x", nodes_array, nodes_coord_array);
+	}
+	float2 coord;
 	coord.x=tid*3;
 	coord.y=tid*7;
-	initArray<bool>(false,nodes_array,100000);
+	initArray<bool>(false,nodes_array,10000);
+	initArray<intptr_t>(-1, links_targets_array, 50000);
+
 	addNode(tid,coord);
-	printf("Nodo n° %d creato\n", tid);
+	//printf("Nodo n° %d creato\n", tid);
+
+	__shared__ intptr_t targets_tile[50];
+	__shared__ float weights_tile[50];
+
+	copyToTile<intptr_t> (links_targets_array,targets_tile, tid*average_links_number, tid*average_links_number+average_links_number);
+	//copyToTile<float> (&links_weights_array[tid], weights_tile,5);
+
+	if(tid==0 || tid==83)
+		{
+			printf("\nTribba %d %ld",tid, targets_tile[1]);
+			printf("\nTribba %d %ld",tid, targets_tile[7]);
+		}
+
+	printf("\nCristogesu %d", addLink(tid,2, 100, targets_tile, weights_tile));
+
+	/*uint8_t i = 0;
+	while(i<average_links_number)
+	{
+		printf("\nLink del nodo %d: %d",tid, targets_tile[tid*average_links_number+i]);
+		i++;
+	}*/
 }
 
 #endif /* DEVICE_CUH_ */

@@ -28,7 +28,7 @@
  * To be used ONLY after neighbors array has been copied in a tile in shared memory.
  */
 
-__device__ inline bool addLink(int32_t source_id, int32_t target_id, float weight, intptr_t* neighbors_tile, float* weights_tile)
+__device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float weight, intptr_t* neighbors_tile, float* weights_tile)
 {
 	uint16_t i;
 
@@ -39,7 +39,7 @@ __device__ inline bool addLink(int32_t source_id, int32_t target_id, float weigh
 			{
 			neighbors_tile[threadIdx.x*average_links_number+i]=target_id;
 			weights_tile[threadIdx.x*average_links_number+i]=weight;
-			return true;
+			return 1;
 		}
 	}
 
@@ -62,7 +62,7 @@ __device__ inline bool addLink(int32_t source_id, int32_t target_id, float weigh
 		neighbors_tile[threadIdx.x*average_links_number+i-1]=(intptr_t)temp;   		// supplementary neighbors pointer is stored in last position
 		neighbors_tile[threadIdx.x*average_links_number+i-2]=(intptr_t)tmpweight;	// supplementary weights pointer is stored in second last position
 		neighbors_tile[threadIdx.x*average_links_number+i-3]= -2;		 			//-2 is the marker that tell us that this node has allocated space for its neighbors list
-		return true;
+		return 2;
 	}
 	else  								//supplementary space has been allocated previously
 	{
@@ -79,7 +79,7 @@ __device__ inline bool addLink(int32_t source_id, int32_t target_id, float weigh
 				return true;
 			}
 		}
-		return false;		//an error has occurred
+		return 3;		//an error has occurred
 	}
 }
 
