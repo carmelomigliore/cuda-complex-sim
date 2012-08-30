@@ -127,11 +127,10 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
 template <typename T>
 __device__ inline void copyToTile(T* source, T* tile, uint16_t start, uint16_t end){
 	uint32_t tid=threadIdx.x;
-	uint8_t i =0;
 	#pragma unroll
-	while(i<(end-start)){
-		tile[tid*(end-start)+i]=source[start+i];					//TODO verificare se è più veloce il while oppure memcpy
-		i++;
+	while(tid<(end-start)){
+		tile[tid]=source[start+tid];					//TODO verificare se è più veloce il while oppure memcpy
+		tid+=blockDim.x;
 	}
 };
 
@@ -155,7 +154,7 @@ __global__ void test (){
 	__shared__ intptr_t targets_tile[50];
 	__shared__ float weights_tile[50];
 
-	copyToTile<intptr_t> (links_targets_array,targets_tile, tid*average_links_number, tid*average_links_number+average_links_number);
+	copyToTile<intptr_t> (links_targets_array,targets_tile, 0, 50);
 	//copyToTile<float> (&links_weights_array[tid], weights_tile,5);
 
 	if(tid==0 || tid==83)
