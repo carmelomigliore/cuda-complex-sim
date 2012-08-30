@@ -122,7 +122,7 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
 
 
 /*
- * Used to copy a piece of an array into a tile (can be used to copy from or to SHARED memory)
+ * Used to copy a piece of an array from global memory INTO a tile in shared memory
  */
 
 template <typename T>
@@ -130,6 +130,18 @@ __device__ inline void copyToTile(T* source, T* tile, uint16_t start){
 	uint16_t tid=threadIdx.x; 								//thread index in this block
 	uint32_t gtid= threadIdx.x + blockIdx.x*blockDim.x;		//global thread index
 	tile[tid]=source[start+gtid];
+	tid+=blockDim.x;
+};
+
+/*
+ * Used to copy back from a tile in shared memory to an array in global memory
+ */
+
+template <typename T>
+__device__ inline void copyFromTile(T* source, T* tile, uint16_t start){
+	uint16_t tid=threadIdx.x; 								//thread index in this block
+	uint32_t gtid= threadIdx.x + blockIdx.x*blockDim.x;		//global thread index
+	source[start+gtid]=tile[tid];
 	tid+=blockDim.x;
 };
 
