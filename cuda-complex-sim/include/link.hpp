@@ -23,59 +23,63 @@
 
 #include "parameters.hpp"
 
+
+
+typedef struct __align__(16) enzo {
+intptr_t target;
+float weight;
+bool to_remove;
+}Link;
+
 /*
  * Add a new link between a source node and a target node.
  * To be used ONLY after neighbors array has been copied in a tile in shared memory.
  */
 
-__device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float weight, intptr_t* neighbors_tile, float* weights_tile)
+//TODO Convertire link in una struct in modo da poter sfruttare meglio la shared memory
+
+__device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float weight, Link* neighbors_tile)
 {
 	uint16_t i;
 
 	#pragma unroll
 
 	for(i=0;i<average_links_number;i++){
-		if(neighbors_tile[threadIdx.x*average_links_number+i]==-1)		//there is no need to allocate supplementary space
+		if(neighbors_tile[threadIdx.x*average_links_number+i].target==-1)		//there is no need to allocate supplementary space
 			{
-			neighbors_tile[threadIdx.x*average_links_number+i]=target_id;
-			weights_tile[threadIdx.x*average_links_number+i]=weight;
+			neighbors_tile[threadIdx.x*average_links_number+i].target=target_id;
+			neighbors_tile[threadIdx.x*average_links_number+i].weight=weight;
 			return 1;
 		}
 	}
 
 
-	intptr_t* temp;
-	float* tmpweight;
-	if(neighbors_tile[threadIdx.x*average_links_number+i-3]!=-2)		//supplementary space has not been allocated yet
+	Link* temp;
+	if(neighbors_tile[threadIdx.x*average_links_number+i-2].target!=-2)		//supplementary space has not been allocated yet
 	{
-		temp = (intptr_t*)malloc(supplementary_links_array_size*sizeof(intptr_t));
-		tmpweight = (float*)malloc(supplementary_links_array_size*sizeof(float*));
-		temp[0]=neighbors_tile[threadIdx.x*average_links_number+i-3];
-		temp[1]=neighbors_tile[threadIdx.x*average_links_number+i-2];
-		temp[2]=neighbors_tile[threadIdx.x*average_links_number+i-1];
-		temp[3]=target_id;
-		tmpweight[0]=weights_tile[threadIdx.x*average_links_number+i-3];
-		tmpweight[1]=weights_tile[threadIdx.x*average_links_number+i-2];
-		tmpweight[2]=weights_tile[threadIdx.x*average_links_number+i-1];
-		tmpweight[3]=weight;
+		temp = (Link*)malloc(supplementary_links_array_size*sizeof(Link));
+		temp[0].target=neighbors_tile[threadIdx.x*average_links_number+i-2].target;
+		temp[0].weight=neighbors_tile[threadIdx.x*average_links_number+i-2].weight;
+		temp[1].target=neighbors_tile[threadIdx.x*average_links_number+i-1].target;
+		temp[1].weight=neighbors_tile[threadIdx.x*average_links_number+i-1].weight;
+		temp[2].target=target_id;
+		temp[2].weight=weight;
 
-		neighbors_tile[threadIdx.x*average_links_number+i-1]=(intptr_t)temp;   		// supplementary neighbors pointer is stored in last position
-		neighbors_tile[threadIdx.x*average_links_number+i-2]=(intptr_t)tmpweight;	// supplementary weights pointer is stored in second last position
-		neighbors_tile[threadIdx.x*average_links_number+i-3]= -2;		 			//-2 is the marker that tell us that this node has allocated space for its neighbors list
+		neighbors_tile[threadIdx.x*average_links_number+i-1].target=(intptr_t)temp;   		// supplementary neighbors pointer is stored in last position
+		neighbors_tile[threadIdx.x*average_links_number+i-2].target=-2;					//-2 is the marker that tell us that this node has allocated space for its neighbors list
 		return 2;
 	}
 	else  								//supplementary space has been allocated previously
 	{
-		temp=(intptr_t*)neighbors_tile[threadIdx.x*average_links_number+i-1];
-		tmpweight=(float*)neighbors_tile[threadIdx.x*average_links_number+i-2];
+		temp=(Link*)neighbors_tile[threadIdx.x*average_links_number+i-1].target;
 
 		#pragma unroll
 		for(i=0;i<supplementary_links_array_size;i++)
 		{
-			if(temp[i]!=-1)
+			if(temp[i].target!=-1)
 			{
-				temp[i]=target_id;
-				tmpweight[i]=weight;
+				temp[i].target=target_id;
+				temp[i].weight=weight;
 				return true;
 			}
 		}
@@ -83,10 +87,10 @@ __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float we
 	}
 }
 
-__device__ inline void removeLink(uint16_t index, intptr_t* neighborsTile, float* weightsTile)
+__device__ inline void removeLink(uint16_t index, Link* neighborsTile)
 {
-	neighborsTile[index]=-1;
-	weightsTile[index]=-1;
+	neighborsTile[index].target=-1;
+	neighborsTile[index].weight=-1;
 }
 
 #endif /* LINK_HPP_ */

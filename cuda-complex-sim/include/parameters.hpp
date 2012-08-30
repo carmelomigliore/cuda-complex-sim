@@ -21,6 +21,13 @@
 
 #include <stdint.h>
 
+#define BLOCKS 256
+
+#define THREADS_PER_BLOCK 32
+
+struct enzo;
+typedef struct enzo Link;
+
 /* Global constants */
 __constant__ uint32_t max_nodes_number;
 __constant__ uint8_t average_links_number;
@@ -35,8 +42,8 @@ __constant__ float2* nodes_coord_array;
 
 /* Links arrays addresses */
 
-__constant__ intptr_t* links_targets_array;  //node's id is signed
-__constant__ float* links_weights_array;
+__constant__ Link* links_targets_array;  //node's id is signed
+//__constant__ float* links_weights_array;
 //TODO importante l'array dei link ai vicini va caricato (a pezzi) sulla shared memory.
 //Purtroppo non si possono usare i registri dato che gli array verranno indirizzati dinamicamente.
 

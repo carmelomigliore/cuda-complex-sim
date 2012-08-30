@@ -36,7 +36,7 @@ using namespace std;
  */
 
 
-__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, int32_t** links_target_dev, float** links_weight_dev, int32_t** actives_dev, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size){
+__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, Link** links_target_dev, int32_t** actives_dev, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size){
 
 	/* allocate nodes array */
 
@@ -52,18 +52,19 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 
 	/* allocate links arrays */
 
-	if(cudaMalloc((void**)links_target_dev, max_nodes*avg_links*sizeof(intptr_t))!=cudaSuccess){
+	if(cudaMalloc((void**)links_target_dev, max_nodes*avg_links*sizeof(Link))!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMalloc((void**)links_weight_dev, max_nodes*avg_links*sizeof(float))!=cudaSuccess){
+	/*if(cudaMalloc((void**)links_weight_dev, max_nodes*avg_links*sizeof(float))!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device";
 			return false;
-	}
-	if(cudaMalloc((void**)actives_dev, active_size*sizeof(int32_t))!=cudaSuccess){
+	}*/
+
+	/*if(cudaMalloc((void**)actives_dev, active_size*sizeof(int32_t))!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
-	}
+	}*/
 
 
 	/* copy constants to device memory */
@@ -94,14 +95,14 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMemcpyToSymbol(links_targets_array, links_target_dev, sizeof(intptr_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	if(cudaMemcpyToSymbol(links_targets_array, links_target_dev, sizeof(Link*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMemcpyToSymbol(links_weights_array, links_weight_dev, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	/*if(cudaMemcpyToSymbol(links_weights_array, links_weight_dev, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
-	}
+	}*/
 
 	/* Success! */
 	return true;
@@ -125,13 +126,11 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
  */
 
 template <typename T>
-__device__ inline void copyToTile(T* source, T* tile, uint16_t start, uint16_t end){
-	uint32_t tid=threadIdx.x;
-	#pragma unroll
-	while(tid<(end-start)){
-		tile[tid]=source[start+tid];					//TODO verificare se è più veloce il while oppure memcpy
-		tid+=blockDim.x;
-	}
+__device__ inline void copyToTile(T* source, T* tile, uint16_t start){
+	uint16_t tid=threadIdx.x; 								//thread index in this block
+	uint32_t gtid= threadIdx.x + blockIdx.x*blockDim.x;		//global thread index
+	tile[tid]=source[start+gtid];
+	tid+=blockDim.x;
 };
 
 
@@ -145,25 +144,29 @@ __global__ void test (){
 	float2 coord;
 	coord.x=tid*3;
 	coord.y=tid*7;
+
+	Link init;
+	init.target=-1;
+	init.weight=-1;
+	init.to_remove=false;
 	initArray<bool>(false,nodes_array,10000);
-	initArray<intptr_t>(-1, links_targets_array, 50000);
+	initArray<Link>(init, links_targets_array, 50000);
 
 	addNode(tid,coord);
 	//printf("Nodo n° %d creato\n", tid);
 
-	__shared__ intptr_t targets_tile[50];
-	__shared__ float weights_tile[50];
+	extern __shared__ Link targets_tile[];
 
-	copyToTile<intptr_t> (links_targets_array,targets_tile, 0, 50);
+	copyToTile<Link> (links_targets_array,targets_tile, 0);
 	//copyToTile<float> (&links_weights_array[tid], weights_tile,5);
 
 	if(tid==0 || tid==83)
 		{
-			printf("\nTribba %d %ld",tid, targets_tile[1]);
-			printf("\nTribba %d %ld",tid, targets_tile[7]);
+			printf("\nTribba %d %ld",tid, targets_tile[1].target);
+			printf("\nTribba %d %ld",tid, targets_tile[7].target);
 		}
 
-	printf("\nCristogesu %d", addLink(tid,2, 100, targets_tile, weights_tile));
+	printf("\nCristogesu %d", addLink(tid,2, 100, targets_tile));
 
 	/*uint8_t i = 0;
 	while(i<average_links_number)

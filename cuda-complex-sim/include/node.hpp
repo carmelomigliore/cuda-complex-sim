@@ -25,6 +25,7 @@
 #include "math.h"
 #include "parameters.hpp"
 #include "node_resource.hpp"
+#include "link.hpp"
 
 
 
@@ -47,13 +48,15 @@ __device__ inline float calculateDistance(float2 c1, float2 c2){
 
 	 if(id!=0)
 	 {
-		 links_targets_array[id*average_links_number]=id-1;
-		 links_weights_array[id*average_links_number]=calculateDistance(coord,nodes_coord_array[id-1]);
+		 links_targets_array[id*average_links_number].target=id-1;
+		 links_targets_array[id*average_links_number].weight=calculateDistance(coord,nodes_coord_array[id-1]);
+		 links_targets_array[id*average_links_number].to_remove=false;
 	 }
 	 else
 	 {
-		 links_targets_array[id*average_links_number]=1;
-		 links_weights_array[id*average_links_number]=calculateDistance(coord,nodes_coord_array[1]);
+		 links_targets_array[id*average_links_number].target=1;
+		 links_targets_array[id*average_links_number].weight=calculateDistance(coord,nodes_coord_array[1]);
+		 links_targets_array[id*average_links_number].to_remove=false;
 	 }
  }
 
