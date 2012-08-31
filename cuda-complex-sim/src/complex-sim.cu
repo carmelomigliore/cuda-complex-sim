@@ -30,9 +30,9 @@ int main(){
 
 	if(allocateDataStructures(&nodes_dev, &nodes_coord_dev, &links_target_dev, &actives_dev, max_nodes,average_links, active_size))
 	{
-		printf("\nOK\n Nodes_dev_if: %x, nodes_coord_if: %x", nodes_dev, nodes_coord_dev);
+		printf("\nOK\n Nodes_dev_if: %x, nodes_coord_if: %x", nodes_dev, links_target_dev);
 	}
 
-	test<<<BLOCKS,THREADS_PER_BLOCK,THREADS_PER_BLOCK*sizeof(Link)>>>();
+	test<<<BLOCKS,THREADS_PER_BLOCK,THREADS_PER_BLOCK*average_links*sizeof(Link)>>>();
 	cudaThreadExit();
 }

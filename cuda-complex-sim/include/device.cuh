@@ -89,7 +89,7 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	printf("Nodes_mall: %x, Coord_mall: %x", nodes_dev, nodes_coord_dev);
+	printf("Nodes_mall: %x, Links_mall: %x", *nodes_dev, *links_target_dev);
 
 	if(cudaMemcpyToSymbol(nodes_coord_array, nodes_coord_dev, sizeof(float2*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
@@ -123,26 +123,30 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
 
 /*
  * Used to copy a piece of an array from global memory INTO a tile in shared memory
+ * Nota bene: adesso funziona, per favore di cristo non toccarla più.
  */
 
 template <typename T>
-__device__ inline void copyToTile(T* source, T* tile, uint16_t start){
-	uint16_t tid=threadIdx.x; 								//thread index in this block
-	uint32_t gtid= threadIdx.x + blockIdx.x*blockDim.x;		//global thread index
-	tile[tid]=source[start+gtid];
-	tid+=blockDim.x;
-};
-
+__device__ inline void copyToTile(T* source, T* tile, uint16_t start, uint16_t elements_per_thread){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Così ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
+	uint16_t tid=threadIdx.x; 																				//thread index in this block
+	while(tid<blockDim.x*elements_per_thread)
+	{
+		tile[tid]=source[start+tid+blockIdx.x*blockDim.x*elements_per_thread];
+		tid+=blockDim.x;
+	}
+}
 /*
  * Used to copy back from a tile in shared memory to an array in global memory
  */
 
 template <typename T>
-__device__ inline void copyFromTile(T* source, T* tile, uint16_t start){
-	uint16_t tid=threadIdx.x; 								//thread index in this block
-	uint32_t gtid= threadIdx.x + blockIdx.x*blockDim.x;		//global thread index
-	source[start+gtid]=tile[tid];
-	tid+=blockDim.x;
+__device__ inline void copyFromTile(T* source, T* tile, uint16_t start, uint16_t elements_per_thread){
+	uint16_t tid=threadIdx.x; 																				//thread index in this block
+	while(tid<blockDim.x*elements_per_thread)
+	{
+		source[start+tid+blockIdx.x*blockDim.x*elements_per_thread]=tile[tid];
+		tid+=blockDim.x;
+	}
 };
 
 
@@ -163,22 +167,41 @@ __global__ void test (){
 	init.to_remove=false;
 	initArray<bool>(false,nodes_array,10000);
 	initArray<Link>(init, links_targets_array, 50000);
+	__syncthreads();
 
 	addNode(tid,coord);
+	__syncthreads();
 	//printf("Nodo n° %d creato\n", tid);
 
 	extern __shared__ Link targets_tile[];
 
-	copyToTile<Link> (links_targets_array,targets_tile, 0);
-	//copyToTile<float> (&links_weights_array[tid], weights_tile,5);
+	copyToTile<Link> (links_targets_array,targets_tile, 0,5);
+	__syncthreads();
 
-	if(tid==0 || tid==83)
+	if(tid==32)
+	{
+		uint8_t i=0;
+		while(i<25)
 		{
-			printf("\nTribba %d %ld",tid, targets_tile[1].target);
-			printf("\nTribba %d %ld",tid, targets_tile[7].target);
+			printf("\nCristoCristo %d",i);
+			printf("\nCristenzo %d", targets_tile[i].target);
+			printf("\nDiocristo %d", links_targets_array[i+tid*5].target);
+			i++;
 		}
+	}
 
-	printf("\nCristogesu %d", addLink(tid,2, 100, targets_tile));
+	if(tid==32)
+		{
+			printf("\nCristogesu %d", addLink(tid,2, 100, targets_tile));
+			printf("\nCristogesu %d", addLink(tid,3, 100, targets_tile));
+			printf("\nCristogesu %d", addLink(tid,4, 100, targets_tile));
+			printf("\nCristogesu %d", addLink(tid,5, 100, targets_tile));
+			printf("\nCristogesu %d", addLink(tid,6, 100, targets_tile));
+			printf("\nCristogesu %d", addLink(tid,7, 100, targets_tile));
+			printf("\nCristogesu %d", addLink(tid,8, 100, targets_tile));
+			printf("\nCristogesu %d", addLink(tid,9, 100, targets_tile));
+			printf("\nCristogesu %d", addLink(tid,10, 100, targets_tile));
+		}
 
 	/*uint8_t i = 0;
 	while(i<average_links_number)
