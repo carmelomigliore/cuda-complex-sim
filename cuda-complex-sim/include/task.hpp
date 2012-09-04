@@ -27,7 +27,7 @@ typedef struct __align__(16) task_argument_s{
 	void* out;
 }task_arguments;
 
-/* Assign a task to a node. */
+/* Assign a task to a node. Return true if success, false if not */
 
 __device__ bool assignTask(uint32_t id, task_t task, task_arguments args)
 {
