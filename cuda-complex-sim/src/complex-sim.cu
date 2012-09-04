@@ -33,6 +33,6 @@ int main(){
 		printf("\nOK\n Nodes_dev_if: %x, nodes_coord_if: %x", nodes_dev, links_target_dev);
 	}
 
-	test<<<BLOCKS,THREADS_PER_BLOCK,THREADS_PER_BLOCK*average_links*sizeof(Link)>>>();
+	test<<<BLOCKS,THREADS_PER_BLOCK,THREADS_PER_BLOCK*average_links*sizeof(Link)*3>>>(); //3 è per il read-ahead
 	cudaThreadExit();
 }
