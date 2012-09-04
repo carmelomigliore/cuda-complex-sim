@@ -36,7 +36,6 @@ bool to_remove;
  * To be used ONLY after neighbors array has been copied in a tile in shared memory.
  */
 
-//TODO Convertire link in una struct in modo da poter sfruttare meglio la shared memory
 
 __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float weight, Link* neighbors_tile)
 {
