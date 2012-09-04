@@ -25,7 +25,7 @@
 
 
 
-typedef struct __align__(16) enzo {
+typedef struct __align__(16) link_s {
 intptr_t target;
 float weight;
 bool to_remove;
@@ -58,16 +58,30 @@ __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float we
 	if(neighbors_tile[threadIdx.x*average_links_number+i-2].target!=-2)		//supplementary space has not been allocated yet
 	{
 		temp = (Link*)malloc(supplementary_links_array_size*sizeof(Link));
-		temp[0].target=neighbors_tile[threadIdx.x*average_links_number+i-2].target;
-		temp[0].weight=neighbors_tile[threadIdx.x*average_links_number+i-2].weight;
-		temp[1].target=neighbors_tile[threadIdx.x*average_links_number+i-1].target;
-		temp[1].weight=neighbors_tile[threadIdx.x*average_links_number+i-1].weight;
-		temp[2].target=target_id;
-		temp[2].weight=weight;
 
-		neighbors_tile[threadIdx.x*average_links_number+i-1].target=(intptr_t)temp;   		// supplementary neighbors pointer is stored in last position
-		neighbors_tile[threadIdx.x*average_links_number+i-2].target=-2;					//-2 is the marker that tell us that this node has allocated space for its neighbors list
-		return 2;
+				/* Initializes the supplementary array to -1 */
+
+				uint16_t i=0;
+				Link init;
+				init.target=-1;
+				#pragma unroll
+				while(i<supplementary_links_array_size)
+				{
+					temp[i]=init;
+					i++;
+				}
+
+				// Copy neighbours_tile's last 2 elements in the first 2 elements of temp,
+				// adds the new link and finally save temp's address in neighbours_tile
+
+				temp[0]=neighbors_tile[threadIdx.x*average_links_number+i-2];
+				temp[1]=neighbors_tile[threadIdx.x*average_links_number+i-1];
+				temp[2].target=target_id;
+				temp[2].weight=weight;
+
+				neighbors_tile[threadIdx.x*average_links_number+i-1].target=(intptr_t)temp;   		// supplementary neighbors pointer is stored in last position
+				neighbors_tile[threadIdx.x*average_links_number+i-2].target=-2;					//-2 is the marker that tell us that this node has allocated space for its neighbors list
+				return 2;
 	}
 	else  								//supplementary space has been allocated previously
 	{
@@ -80,10 +94,10 @@ __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float we
 			{
 				temp[i].target=target_id;
 				temp[i].weight=weight;
-				return true;
+				return 3;
 			}
 		}
-		return 3;		//an error has occurred
+		return 4;		//an error has occurred
 	}
 }
 

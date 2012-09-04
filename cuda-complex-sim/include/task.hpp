@@ -1,7 +1,7 @@
-/* Copyright (C) 2012 Carmelo Migliore, Fabrizio Gueli
- *
+/* Copyright (C) 2012 Carmelo Migliore
+ * 
  * This file is part of Cuda-complex-sim
- *
+ * 
  * Cuda-complex-sim is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation, either
@@ -16,23 +16,29 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "device.cuh"
+#ifndef TASK_HPP_
+#define TASK_HPP_
 
-int main(){
+#include "parameters.hpp"
+#include <stddef.h>
 
-	bool* nodes_dev;
-	float2* nodes_coord_dev;
-	Link* links_target_dev;
-	int32_t* actives_dev;
-	uint32_t max_nodes=10000;
-	uint8_t average_links=5;
-	uint32_t active_size=1000;
+typedef struct __align__(16) task_argument_s{
+	void* in;
+	void* out;
+}task_arguments;
 
-	if(allocateDataStructures(&nodes_dev, &nodes_coord_dev, &links_target_dev, &actives_dev, max_nodes,average_links, active_size))
+/* Assign a task to a node. */
+
+__device__ bool assignTask(uint32_t id, task_t task, task_arguments args)
+{
+	if(task_array[id]==NULL)
 	{
-		printf("\nOK\n Nodes_dev_if: %x, nodes_coord_if: %x", nodes_dev, links_target_dev);
+		task_array[id]=task;
+		task_arguments_array[id]=args;
+		return true;
 	}
-
-	test<<<BLOCKS,THREADS_PER_BLOCK,THREADS_PER_BLOCK*average_links*sizeof(Link)*3>>>(); //3 è per il read-ahead
-	cudaThreadExit();
+	return false;
 }
+
+
+#endif /* TASK_HPP_ */

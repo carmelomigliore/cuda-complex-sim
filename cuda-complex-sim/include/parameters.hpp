@@ -21,12 +21,15 @@
 
 #include <stdint.h>
 
+
 #define BLOCKS 256
 
 #define THREADS_PER_BLOCK 32
 
-struct enzo;
-typedef struct enzo Link;
+/* Frorward declarations */
+struct link_s;
+struct task_arguments_s;
+typedef bool (*task_t) (void* in, void **out); //generic task
 
 /* Global constants */
 __constant__ uint32_t max_nodes_number;
@@ -36,16 +39,16 @@ __constant__ uint16_t supplementary_links_array_size;
 //__constant__ uint8_t message_buffer_size;
 
 /* Nodes arrays addresses */
-
 __constant__ bool* nodes_array;
 __constant__ float2* nodes_coord_array;
 
 /* Links arrays addresses */
-
-__constant__ Link* links_targets_array;  //node's id is signed
-//__constant__ float* links_weights_array;
+__constant__ link_s* links_targets_array;  //node's id is signed
 //TODO importante l'array dei link ai vicini va caricato (a pezzi) sulla shared memory.
 //Purtroppo non si possono usare i registri dato che gli array verranno indirizzati dinamicamente.
 
+/* Task arrays addresses */
+__constant__ task_t* task_array;
+__constant__ task_arguments_s* task_arguments_array;
 
 #endif /* PARAMETERS_HPP_ */
