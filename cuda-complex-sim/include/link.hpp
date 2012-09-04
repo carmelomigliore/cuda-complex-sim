@@ -60,14 +60,13 @@ __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float we
 
 				/* Initializes the supplementary array to -1 */
 
-				uint16_t i=0;
+				uint16_t j=0;
 				Link init;
 				init.target=-1;
-				#pragma unroll
-				while(i<supplementary_links_array_size)
+				while(j<supplementary_links_array_size)
 				{
-					temp[i]=init;
-					i++;
+					temp[j]=init;
+					j++;
 				}
 
 				// Copy neighbours_tile's last 2 elements in the first 2 elements of temp,

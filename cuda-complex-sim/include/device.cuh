@@ -36,7 +36,7 @@ using namespace std;
  */
 
 
-__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, Link** links_target_dev, int32_t** actives_dev, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size){
+__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, Link** links_target_dev, int32_t** actives_dev, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size, uint16_t supplementary_size){
 
 	/* allocate nodes array */
 
@@ -81,6 +81,11 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
+	if(cudaMemcpyToSymbol(supplementary_links_array_size, &supplementary_size, sizeof(uint16_t),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+
 
 
 	/* copy arrays' addresses to device memory */
@@ -129,12 +134,12 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
  */
 
 template <typename T>
-__device__ inline void copyToTile(T* source, T* tile, int16_t start, uint16_t elements_per_thread){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Così ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
+__device__ inline void copyToTile(T* source, T* tile, int16_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Così ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
 	uint16_t tid=threadIdx.x; 																		//thread index in this block
 	#pragma unroll
 	while(tid<blockDim.x*elements_per_thread)
 	{
-		tile[tid]=source[start+tid+blockIdx.x*blockDim.x*elements_per_thread];
+		tile[tid+tile_offset]=source[start+tid+blockIdx.x*blockDim.x*elements_per_thread];
 		tid+=blockDim.x;
 	}
 }
@@ -153,10 +158,10 @@ __device__ inline T* copyToTileReadAhead(T* source, T* tile, int16_t start, uint
 
 	if (blockIdx.x!=0 || start > blockDim.x*elements_per_thread) //threads of block zero must avoid to copy elements of the previous block if they are currently treating the head of the array, because there aren't elements before source[0]!!
 	{
-		copyToTile <T> (source, tile, start-blockDim.x*elements_per_thread, elements_per_thread); //copy the elements of the block before the current block
+		copyToTile <T> (source, tile, start-blockDim.x*elements_per_thread, elements_per_thread,0); //copy the elements of the block before the current block
 	}
-	copyToTile <T> (source, tile, start, elements_per_thread); //copy the elements of the current block
-	copyToTile <T> (source, tile, start+blockDim.x*elements_per_thread, elements_per_thread); //copy the elments of the block next to the current block
+	copyToTile <T> (source, tile, start, elements_per_thread,blockDim.x*elements_per_thread); //copy the elements of the current block
+	copyToTile <T> (source, tile, start+blockDim.x*elements_per_thread, elements_per_thread,2*blockDim.x*elements_per_thread); //copy the elments of the block next to the current block
 
 	return tile+blockDim.x*elements_per_thread;
 }
@@ -200,9 +205,9 @@ __global__ void test (){
 	__syncthreads();
 	//printf("Nodo n° %d creato\n", tid);
 
-	extern __shared__ Link targets_tile[];
+	extern __shared__ Link cache[];
 
-	copyToTile<Link> (links_targets_array,targets_tile, 0,5);
+	Link* targets_tile= copyToTileReadAhead<Link> (links_targets_array,cache, 0,5);
 	__syncthreads();
 
 	if(tid==32)

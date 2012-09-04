@@ -27,8 +27,9 @@ int main(){
 	uint32_t max_nodes=10000;
 	uint8_t average_links=5;
 	uint32_t active_size=1000;
+	uint16_t supplementary_size=30;
 
-	if(allocateDataStructures(&nodes_dev, &nodes_coord_dev, &links_target_dev, &actives_dev, max_nodes,average_links, active_size))
+	if(allocateDataStructures(&nodes_dev, &nodes_coord_dev, &links_target_dev, &actives_dev, max_nodes,average_links, active_size,supplementary_size))
 	{
 		printf("\nOK\n Nodes_dev_if: %x, nodes_coord_if: %x", nodes_dev, links_target_dev);
 	}
