@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Carmelo Migliore, Fabrizio Gueli
+/* Copyright (C) 2012 Carmelo Migliore
  *
  * This file is part of Cuda-complex-sim
  *
@@ -19,5 +19,24 @@
 #ifndef MESSAGE_HPP_
 #define MESSAGE_HPP_
 
+#include "parameters.hpp"
+
+struct __align__(16)message_t{
+	int32_t sender;
+	void* message;
+};
+
+__device__ void sendMessage(int32_t dest, message_t message, message_t* message_tile)
+{
+	uint32_t tid = threadIdx.x + blockIdx.x*blockDim.x;
+	if (dest >=(blockIdx.x-1)*blockDim.x && dest < (blockIdx.x+1)*blockDim.x) //cioè se il destinatario si trova nella cache
+	{
+		message_tile[dest-tid]= message;
+	}
+	else
+	{
+		message_array[dest]= message;
+	}
+}
 
 #endif /* MESSAGE_HPP_ */

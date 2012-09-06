@@ -268,7 +268,8 @@ __global__ void test (){
 
 __device__ bool simpleTask(void * in, void** out)
 {
-	printf("\nHello Qualcomm APQ8064 %d", threadIdx.x+ blockIdx.x*blockDim.x);
+	float* enzo = (float*)in;
+	printf("\nHello Qualcomm APQ8064 %f", threadIdx.x+ blockIdx.x*blockDim.x+*enzo);
 	return true;
 }
 
@@ -294,7 +295,9 @@ __global__ void taskTest()
 
 	__shared__ task_arguments arg_cache [THREADS_PER_BLOCK];
 
-	task_arguments init2; init2.in=NULL; init2.out=NULL;
+	float* optimus = (float*)malloc(sizeof(float));
+	*optimus=0.123;
+	task_arguments init2; init2.in=(void*)optimus; init2.out=NULL;
 
 	while(nodes_array[gtid]==true)
 	{

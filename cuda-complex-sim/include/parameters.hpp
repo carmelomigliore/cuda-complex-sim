@@ -29,6 +29,7 @@
 /* Frorward declarations */
 struct link_s;
 struct task_arguments;
+struct message_t;
 typedef bool (*task_t) (void* in, void **out); //generic task
 
 /* Global constants */
@@ -50,5 +51,8 @@ __constant__ link_s* links_targets_array;  //node's id is signed
 /* Task arrays addresses */
 __constant__ task_t* task_array;
 __constant__ task_arguments* task_arguments_array;
+
+/* Message array address */
+__constant__ message_t* message_array;
 
 #endif /* PARAMETERS_HPP_ */
