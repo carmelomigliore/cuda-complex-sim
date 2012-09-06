@@ -22,10 +22,10 @@
 #include "parameters.hpp"
 #include <stddef.h>
 
-typedef struct __align__(16) task_argument_s{
+struct __align__(16) task_arguments{
 	void* in;
 	void* out;
-}task_arguments;
+};
 
 /* Assign a task to a node. Return true if success, false if not */
 

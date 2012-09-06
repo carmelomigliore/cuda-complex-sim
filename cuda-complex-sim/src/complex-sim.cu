@@ -23,17 +23,20 @@ int main(){
 	bool* nodes_dev;
 	float2* nodes_coord_dev;
 	Link* links_target_dev;
+	task_t* task_dev;
+	task_arguments* task_args_dev;
 	int32_t* actives_dev;
-	uint32_t max_nodes=10000;
+	uint32_t max_nodes=30000;
 	uint8_t average_links=5;
 	uint32_t active_size=1000;
 	uint16_t supplementary_size=30;
 
-	if(allocateDataStructures(&nodes_dev, &nodes_coord_dev, &links_target_dev, &actives_dev, max_nodes,average_links, active_size,supplementary_size))
+	if(allocateDataStructures(&nodes_dev, &nodes_coord_dev, &task_dev, &task_args_dev, &links_target_dev, &actives_dev, max_nodes,average_links, active_size,supplementary_size))
 	{
 		printf("\nOK\n Nodes_dev_if: %x, nodes_coord_if: %x", nodes_dev, links_target_dev);
 	}
 
-	test<<<BLOCKS,THREADS_PER_BLOCK,THREADS_PER_BLOCK*average_links*sizeof(Link)*3>>>(); //3 è per il read-ahead
+	//test<<<BLOCKS,THREADS_PER_BLOCK,THREADS_PER_BLOCK*average_links*sizeof(Link)*3>>>(); //3 è per il read-ahead
+	taskTest<<<BLOCKS,THREADS_PER_BLOCK>>>();
 	cudaThreadExit();
 }

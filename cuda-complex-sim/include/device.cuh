@@ -27,6 +27,7 @@
 #include "link.hpp"
 #include "parameters.hpp"
 #include "message.hpp"
+#include "task.hpp"
 
 using namespace std;
 
@@ -36,7 +37,7 @@ using namespace std;
  */
 
 
-__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, Link** links_target_dev, int32_t** actives_dev, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size, uint16_t supplementary_size){
+__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, task_t** task_dev, task_arguments** task_args_dev, Link** links_target_dev, int32_t** actives_dev, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size, uint16_t supplementary_size){
 
 	/* allocate nodes array */
 
@@ -48,6 +49,18 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 			cerr << "\nCouldn't allocate memory on device";
 			return false;
 	}
+
+	/*Allocate task arrays */
+
+	if(cudaMalloc((void**)task_dev,max_nodes*sizeof(task_t))!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+
+	if(cudaMalloc((void**)task_args_dev,max_nodes*sizeof(bool))!=cudaSuccess){
+			cerr << "\nCouldn't allocate memory on device";
+			return false;
+		}
 
 
 	/* allocate links arrays */
@@ -100,6 +113,17 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
+
+	if(cudaMemcpyToSymbol(task_array, task_dev, sizeof(task_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+
+	if(cudaMemcpyToSymbol(task_arguments_array, task_args_dev, sizeof(task_arguments*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+
 	if(cudaMemcpyToSymbol(links_targets_array, links_target_dev, sizeof(Link*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
@@ -129,8 +153,6 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
 /*
  * Used to copy a piece of an array from global memory INTO a tile in shared memory. The number of elments in the piece is: blockDim.x*elements_per_thread
  * Nota bene: adesso funziona, per favore di cristo non toccarla più.
- * TODO bisogna implementare la possibilità di leggere dati di nodi precedenti e successivi ai nodi del blocco (read-ahead)
- * Per fare ciò si può usare l'aritmetica dei puntatori e usare così indici di array negativi
  */
 
 template <typename T>
@@ -156,7 +178,7 @@ __device__ inline void copyToTile(T* source, T* tile, int16_t start, uint16_t el
 template <typename T>
 __device__ inline T* copyToTileReadAhead(T* source, T* tile, int16_t start, uint16_t elements_per_thread){
 
-	if (blockIdx.x!=0 || start > blockDim.x*elements_per_thread) //threads of block zero must avoid to copy elements of the previous block if they are currently treating the head of the array, because there aren't elements before source[0]!!
+	if (blockIdx.x!=0 || (start > blockDim.x*elements_per_thread)) //threads of block zero must avoid to copy elements of the previous block if they are currently treating the head of the array, because there aren't elements before source[0]!!
 	{
 		copyToTile <T> (source, tile, start-blockDim.x*elements_per_thread, elements_per_thread,0); //copy the elements of the block before the current block
 	}
@@ -185,6 +207,7 @@ __device__ inline void copyFromTile(T* source, T* tile, uint16_t start, uint16_t
 __global__ void test (){
 
 	uint32_t tid = threadIdx.x + blockIdx.x*blockDim.x;
+	uint32_t ltid = threadIdx.x;
 	if(tid==0)
 	{
 		printf("\nNodes: %x, Coord: %x", nodes_array, nodes_coord_array);
@@ -197,8 +220,9 @@ __global__ void test (){
 	init.target=-1;
 	init.weight=-1;
 	init.to_remove=false;
-	initArray<bool>(false,nodes_array,10000);
-	initArray<Link>(init, links_targets_array, 50000);
+	initArray<bool>(false,nodes_array,30000);
+	initArray<Link>(init, links_targets_array, 30000*5);
+	initArray<task_t>(NULL, task_array, 30000);
 	__syncthreads();
 
 	addNode(tid,coord);
@@ -210,20 +234,16 @@ __global__ void test (){
 	Link* targets_tile= copyToTileReadAhead<Link> (links_targets_array,cache, 0,5);
 	__syncthreads();
 
-	if(tid==32)
+	if(tid==0)
 	{
 		uint8_t i=0;
 		while(i<25)
 		{
 			printf("\nCristoCristo %d",i);
-			printf("\nCristenzo %d", targets_tile[i].target);
-			printf("\nDiocristo %d", links_targets_array[i+tid*5].target);
+			printf("\nCristenzo %d", targets_tile[ltid*average_links_number+i].target);
+			printf("\nDiocristo %d", links_targets_array[i+tid*average_links_number].target);
 			i++;
 		}
-	}
-
-	if(tid==32)
-		{
 			printf("\nCristogesu %d", addLink(tid,2, 100, targets_tile));
 			printf("\nCristogesu %d", addLink(tid,3, 100, targets_tile));
 			printf("\nCristogesu %d", addLink(tid,4, 100, targets_tile));
@@ -233,7 +253,10 @@ __global__ void test (){
 			printf("\nCristogesu %d", addLink(tid,8, 100, targets_tile));
 			printf("\nCristogesu %d", addLink(tid,9, 100, targets_tile));
 			printf("\nCristogesu %d", addLink(tid,10, 100, targets_tile));
-		}
+
+			printf("\nGadda da vida %d", targets_tile[160].target);
+			//printf("\nGadda da vida %d", links_targets_array[0].target);
+	}
 
 	/*uint8_t i = 0;
 	while(i<average_links_number)
@@ -243,7 +266,48 @@ __global__ void test (){
 	}*/
 }
 
+__device__ bool simpleTask(void * in, void** out)
+{
+	printf("\nHello Qualcomm APQ8064 %d", threadIdx.x+ blockIdx.x*blockDim.x);
+	return true;
+}
+
+__global__ void taskTest()
+{
+	uint32_t gtid = threadIdx.x + blockIdx.x*blockDim.x;
+	uint16_t tid = threadIdx.x;
+	float2 coord;
+	coord.x=tid*3;
+	coord.y=tid*7;
+
+	Link init;
+	init.target=-1;
+	init.weight=-1;
+	init.to_remove=false;
+	initArray<bool>(false,nodes_array,30000);
+	initArray<Link>(init, links_targets_array, 30000*5);
+	initArray<task_t>(NULL, task_array, 30000);
+	__syncthreads();
+
+	addNode(gtid,coord);
+	__syncthreads();
+
+	__shared__ task_arguments arg_cache [THREADS_PER_BLOCK];
+
+	task_arguments init2; init2.in=NULL; init2.out=NULL;
+
+	while(nodes_array[gtid]==true)
+	{
+		assignTask(gtid, simpleTask, init2);
+		__syncthreads();	//da controllare
+		copyToTile <task_arguments> (task_arguments_array, arg_cache, 0, 1, 0);
+		task_array[gtid](arg_cache[tid].in, &arg_cache[tid].out);
+		gtid+= blockDim.x * gridDim.x;
+	}
+}
+
 #endif /* DEVICE_CUH_ */
+
 
 
 
