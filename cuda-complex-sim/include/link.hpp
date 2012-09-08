@@ -31,11 +31,44 @@ float weight;
 bool to_remove;
 }Link;
 
-/*
- * Add a new link between a source node and a target node.
- * To be used ONLY after neighbors array has been copied in a tile in shared memory.
+/* Add a new link between a source node and a target node.
+ * WARNING: it doesn't allocate a supplementary array if the node has more than average_links_number links.
  */
 
+__device__ inline bool addLink(int32_t source_id, int32_t target_id)
+{
+	for(uint32_t i=0; i<average_links_number; i++)
+	{
+		if(links_targets_array[source_id*average_links_number+i].target==-1)
+		{
+			links_targets_array[source_id*average_links_number+i].target=target_id;
+			return true;
+		}
+	}
+	return false;
+}
+
+/* Check if node is linking target
+ * WARNING: this function acts on global memory and doesn't perform the check on supplementary links array
+ */
+
+__device__ inline bool isLinked(int32_t node, uint32_t target)
+{
+	uint32_t i;
+	for(i=node*average_links_number; i<(node+1)*average_links_number; i++)
+	{
+		if(links_targets_array[i].target==target)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+/*
+ * Add a new link between a source node and a target node.
+ * WARNING: To be used ONLY after neighbors array has been copied in a tile in shared memory.
+ */
 
 __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float weight, Link* neighbors_tile)
 {

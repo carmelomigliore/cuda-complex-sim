@@ -44,7 +44,8 @@ __device__ inline float calculateDistance(float2 c1, float2 c2){
  __device__ inline void addNode(int32_t id, float2 coord){  //TODO la lista dei nodi deve essere costruita in modo ordinato (i vicini devono essere vicini anche come indici)
 	 nodes_array[id]=true;
 	 nodes_coord_array[id]=coord;
-	 __syncthreads();
+
+	 /*__syncthreads();
 
 	 if(id!=0)
 	 {
@@ -59,6 +60,7 @@ __device__ inline float calculateDistance(float2 c1, float2 c2){
 		 links_targets_array[0].weight=calculateDistance(coord,nodes_coord_array[1]);
 		 links_targets_array[0].to_remove=false;
 	 }
+	 */
  }
 
 #endif /* NODES_HPP_ */
