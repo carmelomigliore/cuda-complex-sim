@@ -49,7 +49,7 @@ __device__ inline bool addLink(int32_t source_id, int32_t target_id)
 }
 
 /* Check if node is linking target
- * WARNING: this function acts on global memory and doesn't perform the check on supplementary links array
+ * WARNING: this function acts on GLOBAL memory and doesn't perform the check on supplementary links array
  */
 
 __device__ inline bool isLinked(int32_t node, uint32_t target)
@@ -58,6 +58,23 @@ __device__ inline bool isLinked(int32_t node, uint32_t target)
 	for(i=node*average_links_number; i<(node+1)*average_links_number; i++)
 	{
 		if(links_targets_array[i].target==target)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+
+/* Check if node is linking target
+ * WARNING: this function acts on SHARED memory and doesn't perform the check on supplementary links array
+ */
+__device__ inline bool isLinked(int32_t node, uint32_t target, Link* targets_tile)
+{
+	uint32_t i;
+	for(i=threadIdx.x*average_links_number; i<(threadIdx.x+1)*average_links_number; i++)
+	{
+		if(targets_tile[i].target==target)
 		{
 			return true;
 		}

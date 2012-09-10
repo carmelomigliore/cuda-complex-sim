@@ -23,20 +23,27 @@
 
 struct __align__(16)message_t{
 	int32_t sender;
-	void* message;
+	int32_t receiver;
+	uint32_t ttl;
 };
 
-__device__ void sendMessage(int32_t dest, message_t message, message_t* message_tile)
+
+__device__ bool sendMessage(uint32_t sender, uint32_t receiver, uint32_t ttl, Link* targets_tile, message_t* message_tile)
 {
-	uint32_t tid = threadIdx.x + blockIdx.x*blockDim.x;
-	if (dest >=(blockIdx.x-1)*blockDim.x && dest < (blockIdx.x+1)*blockDim.x) //cioè se il destinatario si trova nella cache
+	message_t m; m.sender=sender; m.receiver=receiver; m.ttl=ttl;
+
+	uint32_t position_offset;
+	position_offset=atomicAdd(&message_counter[receiver],1);
+	if(position_offset<average_links_number)
 	{
-		message_tile[dest-tid]= message;
+		message_array[receiver+position_offset]=m;
+		return true;
 	}
 	else
 	{
-		message_array[dest]= message;
+		return false;
 	}
 }
+
 
 #endif /* MESSAGE_HPP_ */

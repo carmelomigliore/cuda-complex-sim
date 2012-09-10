@@ -27,7 +27,7 @@
 __device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uint32_t max_nodes)
 {
 	/* First we allocate links' linearized array, it will contain the target of every link
-	 * It will be used to simulates probability.
+	 * It will be used to simulate probability.
 	 */
 	uint32_t counter=0; //total link counter
 	uint32_t* links_linearized_array = (uint32_t*)malloc(max_nodes*links_number*2*sizeof(uint32_t));
@@ -82,7 +82,7 @@ __device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uin
 				srand(time(NULL));
 				random=rand()%counter;		//generates a number between 0 and counter
 				random_node=links_linearized_array[random];
-				if (!isLinked(i,random_node))
+				if (!isLinked(i,random_node) && random_node!=i)
 				{
 					flag=false; //exit while
 				}
