@@ -27,7 +27,7 @@
 #define THREADS_PER_BLOCK 32
 
 /* Frorward declarations */
-struct link_s;
+struct Link;
 struct task_arguments;
 struct message_t;
 typedef bool (*task_t) (void* in, void **out); //generic task
@@ -44,7 +44,7 @@ __constant__ bool* nodes_array;
 __constant__ float2* nodes_coord_array;
 
 /* Links arrays addresses */
-__constant__ link_s* links_targets_array;  //node's id is signed
+__constant__ Link* links_targets_array;  //node's id is signed
 //TODO importante l'array dei link ai vicini va caricato (a pezzi) sulla shared memory.
 
 

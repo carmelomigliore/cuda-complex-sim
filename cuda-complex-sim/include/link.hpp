@@ -25,11 +25,11 @@
 
 
 
-typedef struct __align__(16) link_s {
+struct __align__(16) Link {
 intptr_t target;
 float weight;
 bool to_remove;
-}Link;
+};
 
 /* Add a new link between a source node and a target node.
  * WARNING: it doesn't allocate a supplementary array if the node has more than average_links_number links.
