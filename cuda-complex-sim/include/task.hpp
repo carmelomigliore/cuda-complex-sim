@@ -27,17 +27,11 @@ struct __align__(16) task_arguments{
 	void* out;
 };
 
-/* Assign a task to a node. Return true if success, false if not */
+/* Assign a task to nodes. */
 
-__device__ bool assignTask(uint32_t id, task_t task, task_arguments args)
+__device__ void assignTask(task_t task)
 {
-	if(task_array[id]==NULL)
-	{
-		task_array[id]=task;
-		task_arguments_array[id]=args;
-		return true;
-	}
-	return false;
+		*task_array=task;
 }
 
 

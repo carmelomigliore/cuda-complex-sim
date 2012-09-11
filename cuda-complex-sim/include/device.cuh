@@ -196,14 +196,15 @@ __device__ inline T* copyToTileReadAhead(T* source, T* tile, int16_t start, uint
  */
 
 template <typename T>
-__device__ inline void copyFromTile(T* source, T* tile, uint16_t start, uint16_t elements_per_thread){
-	uint16_t tid=threadIdx.x; 																				//thread index in this block
+__device__ inline void copyFromTile(T* target, T* tile, int16_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Così ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
+	uint16_t tid=threadIdx.x; 																		//thread index in this block
+	#pragma unroll
 	while(tid<blockDim.x*elements_per_thread)
 	{
-		source[start+tid+blockIdx.x*blockDim.x*elements_per_thread]=tile[tid];
+		target[start+tid+blockIdx.x*blockDim.x*elements_per_thread]=tile[tid+tile_offset];
 		tid+=blockDim.x;
 	}
-};
+}
 
 
 __global__ void test (){
@@ -303,7 +304,7 @@ __global__ void taskTest()
 
 	while(nodes_array[gtid]==true)
 	{
-		assignTask(gtid, simpleTask, init2);
+	//	assignTask(gtid, simpleTask, init2);
 		__syncthreads();	//da controllare
 		copyToTile <task_arguments> (task_arguments_array, arg_cache, 0, 1, 0);
 		task_array[gtid](arg_cache[tid].in, &arg_cache[tid].out);
@@ -331,7 +332,9 @@ __global__ void scale_free(curandState *state)
 		__syncthreads();
 
 		if(gtid==0)
+		{
 			barabasi_game(10,8,1000,state);
+		}
 }
 
 #endif /* DEVICE_CUH_ */

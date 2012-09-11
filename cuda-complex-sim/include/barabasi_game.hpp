@@ -95,12 +95,90 @@ __device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uin
 			counter+=2;
 		}
 	}
+	__threadfence();
 
 	for(int j=0; j<(initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2); j+=2)
 	{
 		printf("\nLink: %d - %d", links_linearized_array[j], links_linearized_array[j+1]);
 	}
 }
+
+
+__device__ void  generateMessages(Link* targets_tile, int32_t nodes_number, int32_t this_node, uint16_t ttl)
+{
+	copyToTile<Link>(links_targets_array, targets_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), average_links_number, 0); // la divisione restituisce la parte intera del quoziente
+	uint32_t random_neighbour_idx;
+	uint32_t random_receiver;
+	message_t mex;
+	random_receiver = (uint32_t)curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])%nodes_number;
+	mex.sender=this_node; mex.receiver=random_receiver; mex.ttl=ttl;
+	if(isLinked(this_node,random_receiver,targets_tile))
+	{
+		sendMessage(random_receiver,mex);
+	}
+	else
+	{
+		random_neighbour_idx = (uint32_t)curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])%average_links_number;
+		sendMessage(targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target,mex);
+	}
+	__threadfence();
+	__syncthreads();
+}
+
+__device__ void checkInbox(message_t* inbox_tile, message_t* outbox_tile, int32_t this_node, int32_t nodes_number)
+{
+	copyToTile<message_t>(message_array, inbox_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), message_queue_size, 0);
+	message_t mex;
+	uint16_t out_counter=0;
+
+	for(int i=0; i<message_counter[this_node];i++)
+	{
+		mex=inbox_tile[threadIdx.x*message_queue_size+i];
+		if(mex.receiver==this_node)
+		{
+			printf("\nReceived!");
+		}
+		else if(mex.ttl==0)
+		{
+			printf("\nFine della corsa");
+		}
+		else
+		{
+			mex.ttl--;
+			outbox_tile[threadIdx.x*message_queue_size+out_counter]=mex;
+			out_counter++;
+		}
+	}
+	message_counter[this_node]=0;
+	outbox_counter[this_node]=out_counter;
+	copyFromTile<message_t>(outbox_array,outbox_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), message_queue_size,0);
+	__threadfence();
+	__syncthreads();
+}
+
+__device__ void sendOutbox(message_t* outbox_tile, Link* targets_tile, int32_t this_node)
+{
+	copyToTile<Link>(links_targets_array, targets_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), average_links_number, 0); // la divisione restituisce la parte intera del quoziente
+	message_t mex;
+	uint32_t random_neighbour_idx;
+	for(int i=0; i<outbox_counter[this_node];i++)
+	{
+		mex=outbox_tile[threadIdx.x*message_queue_size+i];
+		if(isLinked(this_node,mex.receiver,targets_tile))
+		{
+			sendMessage(mex.receiver,mex);
+		}
+		else
+		{
+			random_neighbour_idx = (uint32_t)curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])%average_links_number;
+			sendMessage(targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target,mex);
+		}
+	}
+	outbox_counter[this_node]=0;
+	__threadfence();
+	__syncthreads();
+}
+
 
 
 

@@ -37,7 +37,7 @@ int main(){
 	}
 
 	curandState *d_state;
-	cudaMalloc(&d_state, sizeof(curandState));
+	cudaMalloc(&d_state, BLOCKS*THREADS_PER_BLOCK*sizeof(curandState));
 	srand(time(NULL));
 	init_stuff<<<BLOCKS,THREADS_PER_BLOCK>>>(d_state, rand());
 

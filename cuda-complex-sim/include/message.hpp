@@ -28,10 +28,8 @@ struct __align__(16)message_t{
 };
 
 
-__device__ bool sendMessage(uint32_t sender, uint32_t receiver, uint32_t ttl, Link* targets_tile, message_t* message_tile)
+__device__ bool sendMessage(uint32_t receiver, message_t m)
 {
-	message_t m; m.sender=sender; m.receiver=receiver; m.ttl=ttl;
-
 	uint32_t position_offset;
 	position_offset=atomicAdd(&message_counter[receiver],1);
 	if(position_offset<average_links_number)
@@ -41,7 +39,7 @@ __device__ bool sendMessage(uint32_t sender, uint32_t receiver, uint32_t ttl, Li
 	}
 	else
 	{
-		return false;
+		return false; //inbox full
 	}
 }
 
