@@ -36,7 +36,11 @@ int main(){
 		printf("\nOK\n Nodes_dev_if: %x, nodes_coord_if: %x", nodes_dev, links_target_dev);
 	}
 
-	//test<<<BLOCKS,THREADS_PER_BLOCK,THREADS_PER_BLOCK*average_links*sizeof(Link)*3>>>(); //3 è per il read-ahead
-	taskTest<<<BLOCKS,THREADS_PER_BLOCK>>>();
+	curandState *d_state;
+	cudaMalloc(&d_state, sizeof(curandState));
+	srand(time(NULL));
+	init_stuff<<<BLOCKS,THREADS_PER_BLOCK>>>(d_state, rand());
+
+	scale_free<<<BLOCKS,THREADS_PER_BLOCK>>>(d_state);
 	cudaThreadExit();
 }

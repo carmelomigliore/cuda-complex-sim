@@ -23,11 +23,13 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "curand_kernel.h"
 #include "node.hpp"
 #include "link.hpp"
 #include "parameters.hpp"
 #include "message.hpp"
 #include "task.hpp"
+#include "barabasi_game.hpp"
 
 using namespace std;
 
@@ -307,6 +309,29 @@ __global__ void taskTest()
 		task_array[gtid](arg_cache[tid].in, &arg_cache[tid].out);
 		gtid+= blockDim.x * gridDim.x;
 	}
+}
+
+__global__ void init_stuff(curandState *state, unsigned long long seed) {
+int idx = blockIdx.x * blockDim.x + threadIdx.x;
+curand_init(seed, idx, 0, &state[idx]);
+}
+
+
+
+__global__ void scale_free(curandState *state)
+{
+		uint32_t gtid = threadIdx.x + blockIdx.x*blockDim.x;
+		Link init;
+		init.target=-1;
+		init.weight=-1;
+		init.to_remove=false;
+		initArray<bool>(false,nodes_array,30000);
+		initArray<Link>(init, links_targets_array, 30000*5);
+		initArray<task_t>(NULL, task_array, 30000);
+		__syncthreads();
+
+		if(gtid==0)
+			barabasi_game(10,8,1000,state);
 }
 
 #endif /* DEVICE_CUH_ */

@@ -21,22 +21,24 @@
 
 #include <stdlib.h>
 #include "parameters.hpp"
+#include "curand_kernel.h"
 
 /* Generates a scale-free network using Barabasi's algorithm */
 
-__device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uint32_t max_nodes)
+__device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uint32_t max_nodes, curandState *state)
 {
 	/* First we allocate links' linearized array, it will contain the target of every link
 	 * It will be used to simulate probability.
+	 * (initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2)
 	 */
 	uint32_t counter=0; //total link counter
-	uint32_t* links_linearized_array = (uint32_t*)malloc(max_nodes*links_number*2*sizeof(uint32_t));
+	uint32_t* links_linearized_array = (uint32_t*)malloc((initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2)*sizeof(uint32_t));
 
 
 	/* We create the first N nodes (==initial_nodes) and link all of them with one another*/
 
 	float2 coord; coord.x=0; coord.y=0;  //fake coordinates
-	uint16_t i=0;
+	uint32_t i=0;
 	while(i<initial_nodes)
 	{
 		addNode(i, coord);
@@ -79,8 +81,8 @@ __device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uin
 			 */
 			while(flag)
 			{
-				srand(time(NULL));
-				random=rand()%counter;		//generates a number between 0 and counter
+				random = (uint32_t)(curand_uniform(state)*counter)%counter;		//generates a number between 0 and counter
+				//printf("\nDino %d - %d", random, counter);
 				random_node=links_linearized_array[random];
 				if (!isLinked(i,random_node) && random_node!=i)
 				{
@@ -89,9 +91,14 @@ __device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uin
 			}
 			addLink(i, random_node);
 			links_linearized_array[counter]= i;			//Add the new link source and target to links_linearized_array
-			links_linearized_array[counter]= random_node;
+			links_linearized_array[counter+1]= random_node;
 			counter+=2;
 		}
+	}
+
+	for(int j=0; j<(initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2); j+=2)
+	{
+		printf("\nLink: %d - %d", links_linearized_array[j], links_linearized_array[j+1]);
 	}
 }
 
