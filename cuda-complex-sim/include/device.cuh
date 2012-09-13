@@ -30,6 +30,7 @@
 #include "message.hpp"
 #include "task.hpp"
 #include "barabasi_game.hpp"
+#include "templates.hpp"
 
 using namespace std;
 
@@ -39,7 +40,7 @@ using namespace std;
  */
 
 
-__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, task_t** task_dev, task_arguments** task_args_dev, Link** links_target_dev, int32_t** actives_dev, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size, uint16_t supplementary_size){
+__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, task_t** task_dev, task_arguments** task_args_dev, Link** links_target_dev, message_t** inbox_dev, message_t** outbox_dev, uint32_t** inbox_counter_dev, uint16_t** outbox_counter_dev, curandState** d_state, int32_t** actives_dev, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size, uint16_t supplementary_size, uint16_t max_messages){
 
 	/* allocate nodes array */
 
@@ -54,12 +55,12 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 
 	/*Allocate task arrays */
 
-	if(cudaMalloc((void**)task_dev,max_nodes*sizeof(task_t))!=cudaSuccess){
+	if(cudaMalloc((void**)task_dev,sizeof(task_t))!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
 
-	if(cudaMalloc((void**)task_args_dev,max_nodes*sizeof(bool))!=cudaSuccess){
+	if(cudaMalloc((void**)task_args_dev,max_nodes*sizeof(task_arguments))!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device";
 			return false;
 		}
@@ -82,6 +83,35 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 	}*/
 
 
+	/* Allocate messages arrays */
+
+	if(cudaMalloc((void**)inbox_dev, max_nodes*max_messages*sizeof(message_t))!=cudaSuccess)
+	{
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+	if(cudaMalloc((void**)outbox_dev, max_nodes*max_messages*sizeof(message_t))!=cudaSuccess)
+	{
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+	if(cudaMalloc((void**)inbox_counter_dev, max_nodes*sizeof(uint32_t))!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+	if(cudaMalloc((void**)outbox_counter_dev, max_nodes*sizeof(uint16_t))!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+
+	/* Allocate curand seeds array */
+
+	if(cudaMalloc((void**)d_state, BLOCKS*THREADS_PER_BLOCK*sizeof(curandState))!=cudaSuccess)
+	{
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+
 	/* copy constants to device memory */
 
 	if(cudaMemcpyToSymbol(max_nodes_number, &max_nodes, sizeof(uint32_t),0,cudaMemcpyHostToDevice)!=cudaSuccess){
@@ -100,7 +130,10 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-
+	if(cudaMemcpyToSymbol(message_queue_size, &max_messages, sizeof(uint16_t),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
 
 
 	/* copy arrays' addresses to device memory */
@@ -109,7 +142,6 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	printf("Nodes_mall: %x, Links_mall: %x", *nodes_dev, *links_target_dev);
 
 	if(cudaMemcpyToSymbol(nodes_coord_array, nodes_coord_dev, sizeof(float2*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
@@ -130,6 +162,26 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
+	if(cudaMemcpyToSymbol(cstate, d_state, sizeof(curandState*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+	if(cudaMemcpyToSymbol(message_array, inbox_dev, sizeof(message_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+	if(cudaMemcpyToSymbol(outbox_array, outbox_dev, sizeof(message_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+	if(cudaMemcpyToSymbol(message_counter, inbox_counter_dev, sizeof(uint32_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+	if(cudaMemcpyToSymbol(outbox_counter, outbox_counter_dev, sizeof(uint16_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
 	/*if(cudaMemcpyToSymbol(links_weights_array, links_weight_dev, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
@@ -141,70 +193,7 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 
 
 
-template <typename T>
-__device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimension){
-	uint32_t tid=threadIdx.x + blockIdx.x*blockDim.x;
-	#pragma unroll
-	while(tid<arrayDimension){
-		devArray[tid]=initValue;
-		tid+=gridDim.x*gridDim.y*gridDim.z*blockDim.x*blockDim.y*blockDim.z; //increments by the number of total threads
-	}
-};
 
-
-/*
- * Used to copy a piece of an array from global memory INTO a tile in shared memory. The number of elments in the piece is: blockDim.x*elements_per_thread
- * Nota bene: adesso funziona, per favore di cristo non toccarla più.
- */
-
-template <typename T>
-__device__ inline void copyToTile(T* source, T* tile, int16_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Così ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
-	uint16_t tid=threadIdx.x; 																		//thread index in this block
-	#pragma unroll
-	while(tid<blockDim.x*elements_per_thread)
-	{
-		tile[tid+tile_offset]=source[start+tid+blockIdx.x*blockDim.x*elements_per_thread];
-		tid+=blockDim.x;
-	}
-}
-
-
-/*
- * Copy into shared memory elements of the block before, the current block and the block after.
- * Example: the current block (blockDim.x==32, elements_per_thread==5) handles the elements from 160 to 319. Then it will copy 0-150 elements,
- * 160-319 elements and 320-479 elements into a cache in shared memory.
- * It returns a pointer to the first element handled by the current thread in the tile. On the example above
- * it would return a pointer to the 160th element.
- */
-
-template <typename T>
-__device__ inline T* copyToTileReadAhead(T* source, T* tile, int16_t start, uint16_t elements_per_thread){
-
-	if (blockIdx.x!=0 || (start > blockDim.x*elements_per_thread)) //threads of block zero must avoid to copy elements of the previous block if they are currently treating the head of the array, because there aren't elements before source[0]!!
-	{
-		copyToTile <T> (source, tile, start-blockDim.x*elements_per_thread, elements_per_thread,0); //copy the elements of the block before the current block
-	}
-	copyToTile <T> (source, tile, start, elements_per_thread,blockDim.x*elements_per_thread); //copy the elements of the current block
-	copyToTile <T> (source, tile, start+blockDim.x*elements_per_thread, elements_per_thread,2*blockDim.x*elements_per_thread); //copy the elments of the block next to the current block
-
-	return tile+blockDim.x*elements_per_thread;
-}
-
-
-/*
- * Used to copy back from a tile in shared memory to an array in global memory
- */
-
-template <typename T>
-__device__ inline void copyFromTile(T* target, T* tile, int16_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Così ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
-	uint16_t tid=threadIdx.x; 																		//thread index in this block
-	#pragma unroll
-	while(tid<blockDim.x*elements_per_thread)
-	{
-		target[start+tid+blockIdx.x*blockDim.x*elements_per_thread]=tile[tid+tile_offset];
-		tid+=blockDim.x;
-	}
-}
 
 
 __global__ void test (){
@@ -300,7 +289,7 @@ __global__ void taskTest()
 
 	float* optimus = (float*)malloc(sizeof(float));
 	*optimus=0.123;
-	task_arguments init2; init2.in=(void*)optimus; init2.out=NULL;
+//	task_arguments init2; init2.in=(void*)optimus; init2.out=NULL;
 
 	while(nodes_array[gtid]==true)
 	{
@@ -335,6 +324,16 @@ __global__ void scale_free(curandState *state)
 		{
 			barabasi_game(10,8,1000,state);
 		}
+}
+
+__global__ void message_test()
+{
+	uint32_t gtid = threadIdx.x + blockIdx.x*blockDim.x;
+	__shared__ Link tile [8*THREADS_PER_BLOCK];
+	if(nodes_array[gtid]==true)
+	{
+		generateMessages(tile,1000,gtid,5);
+	}
 }
 
 #endif /* DEVICE_CUH_ */

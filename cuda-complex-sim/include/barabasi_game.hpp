@@ -20,8 +20,12 @@
 #define BARABASI_GAME_HPP_
 
 #include <stdlib.h>
+#include "link.hpp"
 #include "parameters.hpp"
 #include "curand_kernel.h"
+#include "message.hpp"
+#include "node.hpp"
+#include "templates.hpp"
 
 /* Generates a scale-free network using Barabasi's algorithm */
 
@@ -107,6 +111,7 @@ __device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uin
 __device__ void  generateMessages(Link* targets_tile, int32_t nodes_number, int32_t this_node, uint16_t ttl)
 {
 	copyToTile<Link>(links_targets_array, targets_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), average_links_number, 0); // la divisione restituisce la parte intera del quoziente
+
 	uint32_t random_neighbour_idx;
 	uint32_t random_receiver;
 	message_t mex;
@@ -115,11 +120,13 @@ __device__ void  generateMessages(Link* targets_tile, int32_t nodes_number, int3
 	if(isLinked(this_node,random_receiver,targets_tile))
 	{
 		sendMessage(random_receiver,mex);
+		printf("\nInviato vicino %d --> %d",random_receiver,this_node);
 	}
 	else
 	{
 		random_neighbour_idx = (uint32_t)curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])%average_links_number;
 		sendMessage(targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target,mex);
+		//printf("\nInviato random %d ---> ",targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target);
 	}
 	__threadfence();
 	__syncthreads();
@@ -178,8 +185,6 @@ __device__ void sendOutbox(message_t* outbox_tile, Link* targets_tile, int32_t t
 	__threadfence();
 	__syncthreads();
 }
-
-
 
 
 #endif /* BARABASI_GAME_HPP_ */
