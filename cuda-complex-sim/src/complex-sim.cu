@@ -31,9 +31,9 @@ int main(){
 	int16_t* outbox_counter_dev;
 	int32_t* actives_dev;
 	curandState *d_state;
-	uint32_t max_nodes=30000;
-	uint8_t average_links=8;
-	uint16_t max_messages=20;
+	uint32_t max_nodes=1000000;
+	uint8_t average_links=30;
+	uint16_t max_messages=70;
 	uint32_t active_size=1000;
 	uint16_t supplementary_size=30;
 

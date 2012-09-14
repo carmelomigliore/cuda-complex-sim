@@ -117,7 +117,7 @@ __device__ void  generateMessages(Link* targets_tile, int32_t nodes_number, int3
 	message_t mex;
 	random_receiver = (uint32_t)(curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])*nodes_number)%nodes_number;
 	//printf("\nDino %1.10f", curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x]));
-	mex.sender=this_node; mex.receiver=random_receiver; mex.ttl=ttl;
+	 mex.receiver=random_receiver; mex.ttl=ttl;
 	if(isLinked(this_node,random_receiver,targets_tile))
 	{
 		sendMessage(random_receiver,mex);
@@ -127,7 +127,6 @@ __device__ void  generateMessages(Link* targets_tile, int32_t nodes_number, int3
 	{
 		random_neighbour_idx = (uint32_t)(curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])*average_links_number)%average_links_number;
 		sendMessage(targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target,mex);
-		//printf("\nInviato random %d ---> ",targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target);
 	}
 	__threadfence();
 	__syncthreads();
@@ -146,7 +145,7 @@ __device__ void checkInbox(message_t* inbox_tile, message_t* outbox_tile, int32_
 		mex=inbox_tile[threadIdx.x*message_queue_size+i];
 		if(mex.receiver==this_node)
 		{
-			printf("\nReceived! %d <--- %d", this_node, mex.sender);
+			printf("\nReceived! %d <---", this_node);
 		}
 		else if(mex.ttl==0)
 		{

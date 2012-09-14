@@ -21,8 +21,8 @@
 
 #include "parameters.hpp"
 
-struct __align__(16)message_t{
-	int32_t sender;
+struct __align__(8)message_t{
+	//int32_t sender;
 	int32_t receiver;
 	uint32_t ttl;
 };

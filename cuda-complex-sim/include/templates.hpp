@@ -37,7 +37,7 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
  */
 
 template <typename T>
-__device__ inline void copyToTile(T* source, T* tile, int16_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Così ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
+__device__ inline void copyToTile(T* source, T* tile, int32_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Così ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
 	uint16_t tid=threadIdx.x; 																		//thread index in this block
 	#pragma unroll
 	while(tid<blockDim.x*elements_per_thread)
@@ -57,7 +57,7 @@ __device__ inline void copyToTile(T* source, T* tile, int16_t start, uint16_t el
  */
 
 template <typename T>
-__device__ inline T* copyToTileReadAhead(T* source, T* tile, int16_t start, uint16_t elements_per_thread){
+__device__ inline T* copyToTileReadAhead(T* source, T* tile, int32_t start, uint16_t elements_per_thread){
 
 	if (blockIdx.x!=0 || (start > blockDim.x*elements_per_thread)) //threads of block zero must avoid to copy elements of the previous block if they are currently treating the head of the array, because there aren't elements before source[0]!!
 	{
@@ -75,7 +75,7 @@ __device__ inline T* copyToTileReadAhead(T* source, T* tile, int16_t start, uint
  */
 
 template <typename T>
-__device__ inline void copyFromTile(T* target, T* tile, int16_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Così ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
+__device__ inline void copyFromTile(T* target, T* tile, int32_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Così ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
 	uint16_t tid=threadIdx.x; 																		//thread index in this block
 	#pragma unroll
 	while(tid<blockDim.x*elements_per_thread)
