@@ -27,8 +27,8 @@ int main(){
 	task_arguments* task_args_dev;
 	message_t* inbox_dev;
 	message_t* outbox_dev;
-	uint32_t* inbox_counter_dev;
-	uint16_t* outbox_counter_dev;
+	int32_t* inbox_counter_dev;
+	int16_t* outbox_counter_dev;
 	int32_t* actives_dev;
 	curandState *d_state;
 	uint32_t max_nodes=30000;
@@ -48,5 +48,8 @@ int main(){
 
 	scale_free<<<BLOCKS,THREADS_PER_BLOCK>>>(d_state);
 	message_test<<<BLOCKS,THREADS_PER_BLOCK>>>();
+	message_test2nd<<<BLOCKS,THREADS_PER_BLOCK>>>();
+	message_test3rd<<<BLOCKS,THREADS_PER_BLOCK>>>();
+	message_test2nd<<<BLOCKS,THREADS_PER_BLOCK>>>();
 	cudaThreadExit();
 }

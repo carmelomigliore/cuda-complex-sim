@@ -86,7 +86,7 @@ __device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uin
 			while(flag)
 			{
 				random = (uint32_t)(curand_uniform(state)*counter)%counter;		//generates a number between 0 and counter
-				//printf("\nDino %d - %d", random, counter);
+				//printf("\nDino %1.10f", curand_uniform(state));
 				random_node=links_linearized_array[random];
 				if (!isLinked(i,random_node) && random_node!=i)
 				{
@@ -103,7 +103,7 @@ __device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uin
 
 	for(int j=0; j<(initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2); j+=2)
 	{
-		printf("\nLink: %d - %d", links_linearized_array[j], links_linearized_array[j+1]);
+		//printf("\nLink: %d - %d", links_linearized_array[j], links_linearized_array[j+1]);
 	}
 }
 
@@ -115,16 +115,17 @@ __device__ void  generateMessages(Link* targets_tile, int32_t nodes_number, int3
 	uint32_t random_neighbour_idx;
 	uint32_t random_receiver;
 	message_t mex;
-	random_receiver = (uint32_t)curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])%nodes_number;
+	random_receiver = (uint32_t)(curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])*nodes_number)%nodes_number;
+	//printf("\nDino %1.10f", curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x]));
 	mex.sender=this_node; mex.receiver=random_receiver; mex.ttl=ttl;
 	if(isLinked(this_node,random_receiver,targets_tile))
 	{
 		sendMessage(random_receiver,mex);
-		printf("\nInviato vicino %d --> %d",random_receiver,this_node);
+		printf("\nInviato vicino %d --> %d",this_node, random_receiver);
 	}
 	else
 	{
-		random_neighbour_idx = (uint32_t)curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])%average_links_number;
+		random_neighbour_idx = (uint32_t)(curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])*average_links_number)%average_links_number;
 		sendMessage(targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target,mex);
 		//printf("\nInviato random %d ---> ",targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target);
 	}
@@ -137,23 +138,26 @@ __device__ void checkInbox(message_t* inbox_tile, message_t* outbox_tile, int32_
 	copyToTile<message_t>(message_array, inbox_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), message_queue_size, 0);
 	message_t mex;
 	uint16_t out_counter=0;
+	uint32_t counter = message_counter[this_node];
 
-	for(int i=0; i<message_counter[this_node];i++)
+	//printf("\ncounter: %d - %d",this_node, counter);
+	for(int i=0; i<counter && i<message_queue_size;i++)
 	{
 		mex=inbox_tile[threadIdx.x*message_queue_size+i];
 		if(mex.receiver==this_node)
 		{
-			printf("\nReceived!");
+			printf("\nReceived! %d <--- %d", this_node, mex.sender);
 		}
 		else if(mex.ttl==0)
 		{
-			printf("\nFine della corsa");
+			printf("\nFine della corsa %d - %d",this_node,mex.ttl);
 		}
 		else
 		{
 			mex.ttl--;
 			outbox_tile[threadIdx.x*message_queue_size+out_counter]=mex;
 			out_counter++;
+			//printf("\nForwarded");
 		}
 	}
 	message_counter[this_node]=0;
@@ -166,6 +170,7 @@ __device__ void checkInbox(message_t* inbox_tile, message_t* outbox_tile, int32_
 __device__ void sendOutbox(message_t* outbox_tile, Link* targets_tile, int32_t this_node)
 {
 	copyToTile<Link>(links_targets_array, targets_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), average_links_number, 0); // la divisione restituisce la parte intera del quoziente
+	copyToTile<message_t>(outbox_array, outbox_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), message_queue_size, 0);
 	message_t mex;
 	uint32_t random_neighbour_idx;
 	for(int i=0; i<outbox_counter[this_node];i++)
@@ -174,10 +179,11 @@ __device__ void sendOutbox(message_t* outbox_tile, Link* targets_tile, int32_t t
 		if(isLinked(this_node,mex.receiver,targets_tile))
 		{
 			sendMessage(mex.receiver,mex);
+			printf("\nInviato in seconda %d ---> %d",this_node,mex.receiver);
 		}
 		else
 		{
-			random_neighbour_idx = (uint32_t)curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])%average_links_number;
+			random_neighbour_idx = (uint32_t)(curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])*average_links_number)%average_links_number;
 			sendMessage(targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target,mex);
 		}
 	}

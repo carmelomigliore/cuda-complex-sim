@@ -55,8 +55,8 @@ __constant__ task_arguments* task_arguments_array;
 /* Message array address */
 __constant__ message_t* message_array;
 __constant__ message_t* outbox_array;
-__constant__ uint32_t* message_counter;
-__constant__ uint16_t* outbox_counter;
+__constant__ int32_t* message_counter;
+__constant__ int16_t* outbox_counter;
 
 /* Curand state address */
 __constant__ curandState* cstate;

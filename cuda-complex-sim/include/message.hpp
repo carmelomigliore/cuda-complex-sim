@@ -32,13 +32,14 @@ __device__ bool sendMessage(uint32_t receiver, message_t m)
 {
 	uint32_t position_offset;
 	position_offset=atomicAdd(&message_counter[receiver],1);
-	if(position_offset<average_links_number)
+	if(position_offset<message_queue_size)
 	{
-		message_array[receiver+position_offset]=m;
+		message_array[receiver*message_queue_size+position_offset]=m;
 		return true;
 	}
 	else
 	{
+		//atomicAdd(&message_counter[receiver],-1);
 		return false; //inbox full
 	}
 }
