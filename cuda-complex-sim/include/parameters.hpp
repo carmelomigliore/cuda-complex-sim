@@ -24,7 +24,14 @@
 
 #define BLOCKS 256
 
-#define THREADS_PER_BLOCK 32
+#define THREADS_PER_BLOCK 64
+
+const uint32_t max_nodes=1000000;
+	const uint8_t average_links=20;
+	const uint16_t max_messages=20;
+	const uint32_t active_size=1000;
+	const uint16_t supplementary_size=30;
+	const uint16_t barabasi_initial_nodes=21;
 
 /* Frorward declarations */
 struct Link;
@@ -60,5 +67,11 @@ __constant__ int16_t* outbox_counter;
 
 /* Curand state address */
 __constant__ curandState* cstate;
+
+/*Barabasi parameters */
+__constant__ uint32_t* links_linearized_array;
+__constant__ uint16_t initial_nodes;
+
+__constant__ uint32_t* fail_count;
 
 #endif /* PARAMETERS_HPP_ */

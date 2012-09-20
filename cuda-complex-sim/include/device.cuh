@@ -40,7 +40,7 @@ using namespace std;
  */
 
 
-__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, task_t** task_dev, task_arguments** task_args_dev, Link** links_target_dev, message_t** inbox_dev, message_t** outbox_dev, int32_t** inbox_counter_dev, int16_t** outbox_counter_dev, curandState** d_state, int32_t** actives_dev, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size, uint16_t supplementary_size, uint16_t max_messages){
+__host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev, task_t** task_dev, task_arguments** task_args_dev, Link** links_target_dev, message_t** inbox_dev, message_t** outbox_dev, int32_t** inbox_counter_dev, int16_t** outbox_counter_dev, curandState** d_state, uint32_t** barabasi_links, int32_t** actives_dev, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size, uint16_t supplementary_size, uint16_t max_messages, uint16_t barabasi_initial_nodes){
 
 	/* allocate nodes array */
 
@@ -48,14 +48,15 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		cerr << "\nCouldn't allocate memory on device 1";
 		return false;
 	}
-	if(cudaMalloc((void**)nodes_coord_dev,max_nodes*sizeof(float2))!=cudaSuccess){
+	printf("\nAllocated %d bytes",max_nodes*sizeof(bool));
+	/*if(cudaMalloc((void**)nodes_coord_dev,max_nodes*sizeof(float2))!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device 2";
 			return false;
-	}
+	}*/
 
 	/*Allocate task arrays */
 
-	if(cudaMalloc((void**)task_dev,sizeof(task_t))!=cudaSuccess){
+	/*if(cudaMalloc((void**)task_dev,sizeof(task_t))!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device 3";
 		return false;
 	}
@@ -63,7 +64,7 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 	if(cudaMalloc((void**)task_args_dev,max_nodes*sizeof(task_arguments))!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device 4";
 			return false;
-		}
+		}*/
 
 
 	/* allocate links arrays */
@@ -72,6 +73,7 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		cerr << "\nCouldn't allocate memory on device 5";
 		return false;
 	}
+	printf("\nAllocated %d bytes",max_nodes*avg_links*sizeof(Link));
 	/*if(cudaMalloc((void**)links_weight_dev, max_nodes*avg_links*sizeof(float))!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device";
 			return false;
@@ -85,24 +87,12 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 
 	/* Allocate messages arrays */
 
-	if(cudaMalloc((void**)inbox_dev, max_nodes*max_messages*sizeof(message_t))!=cudaSuccess)
+	if(cudaMalloc((void**)inbox_dev, max_nodes*sizeof(message_t))!=cudaSuccess)
 	{
 		cerr << "\nCouldn't allocate memory on device 6";
 		return false;
 	}
-	if(cudaMalloc((void**)outbox_dev, max_nodes*max_messages*sizeof(message_t))!=cudaSuccess)
-	{
-		cerr << "\nCouldn't allocate memory on device 7";
-		return false;
-	}
-	if(cudaMalloc((void**)inbox_counter_dev, max_nodes*sizeof(int32_t))!=cudaSuccess){
-		cerr << "\nCouldn't allocate memory on device 8";
-		return false;
-	}
-	if(cudaMalloc((void**)outbox_counter_dev, max_nodes*sizeof(int16_t))!=cudaSuccess){
-		cerr << "\nCouldn't allocate memory on device 9";
-		return false;
-	}
+
 
 	/* Allocate curand seeds array */
 
@@ -112,8 +102,28 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		return false;
 	}
 
+	/*Barabasi parameters */
+
+	if(cudaMalloc((void**)barabasi_links,(barabasi_initial_nodes*(barabasi_initial_nodes-1)*2+(max_nodes-barabasi_initial_nodes)*avg_links*2)*sizeof(uint32_t))!=cudaSuccess)
+	{
+		cerr << "\nCouldn't allocate memory on device 11";
+		return false;
+	}
+	uint32_t* count;
+	if(cudaMalloc((void**)&count,sizeof(uint32_t))!=cudaSuccess)
+	{
+			cerr << "\nCouldn't allocate memory on device 11";
+			return false;
+	}
+
+
+
 	/* copy constants to device memory */
 
+	if(cudaMemcpyToSymbol(fail_count, &count, sizeof(uint32_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
 	if(cudaMemcpyToSymbol(max_nodes_number, &max_nodes, sizeof(uint32_t),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
@@ -131,6 +141,10 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		return false;
 	}
 	if(cudaMemcpyToSymbol(message_queue_size, &max_messages, sizeof(uint16_t),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+		cerr << "\nCouldn't allocate memory on device";
+		return false;
+	}
+	if(cudaMemcpyToSymbol(initial_nodes, &barabasi_initial_nodes, sizeof(uint16_t),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
@@ -170,7 +184,7 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-	if(cudaMemcpyToSymbol(outbox_array, outbox_dev, sizeof(message_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	/*if(cudaMemcpyToSymbol(outbox_array, outbox_dev, sizeof(message_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
@@ -181,11 +195,11 @@ __host__ bool allocateDataStructures(bool** nodes_dev, float2** nodes_coord_dev,
 	if(cudaMemcpyToSymbol(outbox_counter, outbox_counter_dev, sizeof(int16_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
-	}
-	/*if(cudaMemcpyToSymbol(links_weights_array, links_weight_dev, sizeof(float*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	}*/
+	if(cudaMemcpyToSymbol(links_linearized_array, barabasi_links, sizeof(uint32_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
-	}*/
+	}
 
 	/* Success! */
 	return true;
@@ -210,8 +224,8 @@ __global__ void test (){
 
 	Link init;
 	init.target=-1;
-	init.weight=-1;
-	init.to_remove=false;
+	//init.weight=-1;
+	//init.to_remove=false;
 	initArray<bool>(false,nodes_array,30000);
 	initArray<Link>(init, links_targets_array, 30000*5);
 	initArray<task_t>(NULL, task_array, 30000);
@@ -275,8 +289,8 @@ __global__ void taskTest()
 
 	Link init;
 	init.target=-1;
-	init.weight=-1;
-	init.to_remove=false;
+	//init.weight=-1;
+	//init.to_remove=false;
 	initArray<bool>(false,nodes_array,30000);
 	initArray<Link>(init, links_targets_array, 30000*5);
 	initArray<task_t>(NULL, task_array, 30000);
@@ -313,55 +327,52 @@ __global__ void scale_free(curandState *state)
 		uint32_t gtid = threadIdx.x + blockIdx.x*blockDim.x;
 		Link init;
 		init.target=-1;
-		init.weight=-1;
-		init.to_remove=false;
+		//init.weight=-1;
+		//init.to_remove=false;
 		initArray<bool>(false,nodes_array,max_nodes_number);
 		initArray<Link>(init, links_targets_array, max_nodes_number*average_links_number);
-		initArray<task_t>(NULL, task_array, max_nodes_number);
-		initArray<int32_t>(0,message_counter,max_nodes_number);
-		initArray<int16_t>(0,outbox_counter,max_nodes_number);
+		//initArray<task_t>(NULL, task_array, max_nodes_number);
+		//initArray<int32_t>(0,message_counter,max_nodes_number);
+		//initArray<int16_t>(0,outbox_counter,max_nodes_number);
+		*fail_count=0;
 		__syncthreads();
 
 		if(gtid==0)
 		{
-			barabasi_game(50,30,50000,state);
+			barabasi_game(initial_nodes,average_links_number,max_nodes_number,state);
 		}
 }
 
 __global__ void message_test()
 {
 	uint32_t gtid = threadIdx.x + blockIdx.x*blockDim.x;
-	__shared__ Link tile [30*THREADS_PER_BLOCK];
-	while(nodes_array[gtid]==true && gtid<max_nodes_number)
+	__shared__ Link tile [average_links*THREADS_PER_BLOCK];
+	while(gtid<max_nodes_number)
 	{
-		generateMessages(tile,50000,gtid,5);
+		generateMessages(tile,max_nodes_number,gtid,30);
 		gtid+=blockDim.x*gridDim.x;
 	}
 }
 __global__ void message_test2nd()
 {
 	uint32_t gtid = threadIdx.x + blockIdx.x*blockDim.x;
-	__shared__ message_t in_tile [140*THREADS_PER_BLOCK];
-	message_t* out_tile=&in_tile[70*THREADS_PER_BLOCK];
-	while(nodes_array[gtid]==true && gtid<max_nodes_number)
+	__shared__ Link targets_tile [average_links*THREADS_PER_BLOCK];
+	while(gtid<max_nodes_number)
 	{
-		checkInbox(in_tile,out_tile,gtid,max_nodes_number);
+		checkInbox(targets_tile,gtid);
 		gtid+=blockDim.x*gridDim.x;
 	}
 }
 
-__global__ void message_test3rd()
+__global__ void print()
 {
-	uint32_t gtid = threadIdx.x + blockIdx.x*blockDim.x;
-	__shared__ message_t out_tile [70*THREADS_PER_BLOCK];
-	__shared__ Link tile [30*THREADS_PER_BLOCK];
-	while(nodes_array[gtid]==true && gtid<max_nodes_number)
-	{
-		sendOutbox(out_tile,tile,gtid);
-		gtid+=blockDim.x*gridDim.x;
-	}
+	printf("\nFail count %d",*fail_count);
 }
 
+__global__ void reset()
+{
+	*fail_count=0;
+}
 
 #endif /* DEVICE_CUH_ */
 

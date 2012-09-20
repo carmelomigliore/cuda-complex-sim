@@ -17,6 +17,7 @@
  */
 
 #include "device.cuh"
+#include "parameters.hpp"
 
 int main(){
 
@@ -29,27 +30,28 @@ int main(){
 	message_t* outbox_dev;
 	int32_t* inbox_counter_dev;
 	int16_t* outbox_counter_dev;
+	uint32_t* barabasi_links;
 	int32_t* actives_dev;
 	curandState *d_state;
-	uint32_t max_nodes=1000000;
-	uint8_t average_links=30;
-	uint16_t max_messages=70;
-	uint32_t active_size=1000;
-	uint16_t supplementary_size=30;
 
 
-	if(allocateDataStructures(&nodes_dev, &nodes_coord_dev, &task_dev, &task_args_dev, &links_target_dev, &inbox_dev, &outbox_dev, &inbox_counter_dev, &outbox_counter_dev, &d_state, &actives_dev, max_nodes,average_links, active_size,supplementary_size, max_messages))
+
+	if(allocateDataStructures(&nodes_dev, &nodes_coord_dev, &task_dev, &task_args_dev, &links_target_dev, &inbox_dev, &outbox_dev, &inbox_counter_dev, &outbox_counter_dev, &d_state, &barabasi_links, &actives_dev, max_nodes,average_links, active_size,supplementary_size, max_messages,barabasi_initial_nodes))
 	{
-		printf("\nOK\n Nodes_dev_if: %x, nodes_coord_if: %x", nodes_dev, links_target_dev);
+		//printf("\nOK\n Nodes_dev_if: %x, nodes_coord_if: %x", nodes_dev, links_target_dev);
 	}
 
 	srand(time(NULL));
 	init_stuff<<<BLOCKS,THREADS_PER_BLOCK>>>(d_state, rand());
 
 	scale_free<<<BLOCKS,THREADS_PER_BLOCK>>>(d_state);
+	size_t avail;
+	size_t total;
+	cudaMemGetInfo( &avail, &total );
+	size_t used = total - avail;
+	printf("\nMemoria: totale %d, in uso %d, disponibile: %d", total, used, avail);
 	message_test<<<BLOCKS,THREADS_PER_BLOCK>>>();
 	message_test2nd<<<BLOCKS,THREADS_PER_BLOCK>>>();
-	message_test3rd<<<BLOCKS,THREADS_PER_BLOCK>>>();
 	message_test2nd<<<BLOCKS,THREADS_PER_BLOCK>>>();
 	cudaThreadExit();
 }

@@ -21,28 +21,21 @@
 
 #include "parameters.hpp"
 
-struct __align__(8)message_t{
-	//int32_t sender;
+struct __align__(16) message_t
+{
+	int32_t original_sender;
 	int32_t receiver;
 	uint32_t ttl;
+	int32_t intermediate;
 };
 
 
-__device__ bool sendMessage(uint32_t receiver, message_t m)
+__device__ inline bool sendMessage(uint32_t sender, message_t m)
 {
-	uint32_t position_offset;
-	position_offset=atomicAdd(&message_counter[receiver],1);
-	if(position_offset<message_queue_size)
-	{
-		message_array[receiver*message_queue_size+position_offset]=m;
+		message_array[sender]=m;
 		return true;
-	}
-	else
-	{
-		//atomicAdd(&message_counter[receiver],-1);
-		return false; //inbox full
-	}
 }
+
 
 
 #endif /* MESSAGE_HPP_ */

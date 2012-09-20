@@ -35,10 +35,13 @@ __device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uin
 	 * It will be used to simulate probability.
 	 * (initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2)
 	 */
+
+
+
 	uint32_t counter=0; //total link counter
-	uint32_t* links_linearized_array = (uint32_t*)malloc((initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2)*sizeof(uint32_t));
 
-
+	printf("\nAllocated %d bytes scale-free", (initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2)*sizeof(uint32_t));
+	if(links_linearized_array==NULL) printf("\nCribba");
 	/* We create the first N nodes (==initial_nodes) and link all of them with one another*/
 
 	float2 coord; coord.x=0; coord.y=0;  //fake coordinates
@@ -101,12 +104,7 @@ __device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uin
 	}
 	__threadfence();
 
-	for(int j=0; j<(initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2); j+=2)
-	{
-		//printf("\nLink: %d - %d", links_linearized_array[j], links_linearized_array[j+1]);
-	}
 }
-
 
 __device__ void  generateMessages(Link* targets_tile, int32_t nodes_number, int32_t this_node, uint16_t ttl)
 {
@@ -116,79 +114,55 @@ __device__ void  generateMessages(Link* targets_tile, int32_t nodes_number, int3
 	uint32_t random_receiver;
 	message_t mex;
 	random_receiver = (uint32_t)(curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])*nodes_number)%nodes_number;
-	//printf("\nDino %1.10f", curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x]));
-	 mex.receiver=random_receiver; mex.ttl=ttl;
-	if(isLinked(this_node,random_receiver,targets_tile))
+	mex.original_sender=this_node; mex.receiver=random_receiver; mex.ttl=ttl;
+	if(isLinked(random_receiver,targets_tile))
 	{
-		sendMessage(random_receiver,mex);
-		printf("\nInviato vicino %d --> %d",this_node, random_receiver);
+		mex.intermediate=-1;
+		//printf("\nInviato vicino %d <-- %d",random_receiver,this_node);
 	}
 	else
 	{
 		random_neighbour_idx = (uint32_t)(curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])*average_links_number)%average_links_number;
-		sendMessage(targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target,mex);
+		mex.intermediate=targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target;
+		//printf("\nInviato random %d ---> ",targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target);
 	}
-	__threadfence();
-	__syncthreads();
+	//__syncthreads();
+	message_array[this_node]=mex;
 }
 
-__device__ void checkInbox(message_t* inbox_tile, message_t* outbox_tile, int32_t this_node, int32_t nodes_number)
+__device__ void checkInbox(Link* targets_tile, int32_t this_thread)
 {
-	copyToTile<message_t>(message_array, inbox_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), message_queue_size, 0);
-	message_t mex;
-	uint16_t out_counter=0;
-	uint32_t counter = message_counter[this_node];
-
-	//printf("\ncounter: %d - %d",this_node, counter);
-	for(int i=0; i<counter && i<message_queue_size;i++)
-	{
-		mex=inbox_tile[threadIdx.x*message_queue_size+i];
-		if(mex.receiver==this_node)
-		{
-			printf("\nReceived! %d <---", this_node);
-		}
-		else if(mex.ttl==0)
-		{
-			printf("\nFine della corsa %d - %d",this_node,mex.ttl);
-		}
-		else
-		{
-			mex.ttl--;
-			outbox_tile[threadIdx.x*message_queue_size+out_counter]=mex;
-			out_counter++;
-			//printf("\nForwarded");
-		}
-	}
-	message_counter[this_node]=0;
-	outbox_counter[this_node]=out_counter;
-	copyFromTile<message_t>(outbox_array,outbox_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), message_queue_size,0);
-	__threadfence();
-	__syncthreads();
-}
-
-__device__ void sendOutbox(message_t* outbox_tile, Link* targets_tile, int32_t this_node)
-{
-	copyToTile<Link>(links_targets_array, targets_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), average_links_number, 0); // la divisione restituisce la parte intera del quoziente
-	copyToTile<message_t>(outbox_array, outbox_tile,(this_node/(gridDim.x*blockDim.x))*(gridDim.x*blockDim.x), message_queue_size, 0);
-	message_t mex;
+	message_t temp = message_array[this_thread];
 	uint32_t random_neighbour_idx;
-	for(int i=0; i<outbox_counter[this_node];i++)
+	if(temp.receiver==-1)
 	{
-		mex=outbox_tile[threadIdx.x*message_queue_size+i];
-		if(isLinked(this_node,mex.receiver,targets_tile))
+		// nothing to do here
+	}
+	else if(temp.intermediate==-1)
+	{
+		//printf("\nRicevuto %d da %d al %d° hop",temp.receiver, temp.original_sender, temp.ttl);
+		temp.receiver=-1;
+	}
+	else if(temp.ttl==0)
+	{
+		temp.receiver=-1;
+	}
+	else
+	{
+		memcpy(&targets_tile[threadIdx.x*average_links_number],&links_targets_array[temp.intermediate*average_links_number],average_links_number*sizeof(Link));
+		temp.ttl--;
+		if(isLinked(temp.receiver,targets_tile))
 		{
-			sendMessage(mex.receiver,mex);
-			printf("\nInviato in seconda %d ---> %d",this_node,mex.receiver);
+			temp.intermediate=-1;
 		}
 		else
 		{
 			random_neighbour_idx = (uint32_t)(curand_uniform(&cstate[threadIdx.x+blockIdx.x*blockDim.x])*average_links_number)%average_links_number;
-			sendMessage(targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target,mex);
+			temp.intermediate=targets_tile[threadIdx.x*average_links_number+random_neighbour_idx].target;
 		}
 	}
-	outbox_counter[this_node]=0;
-	__threadfence();
-	__syncthreads();
+	//__syncthreads(); //TODO controlla se è più veloce con o senza syncthread
+	message_array[this_thread]=temp;
 }
 
 

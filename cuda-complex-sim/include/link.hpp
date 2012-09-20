@@ -25,10 +25,10 @@
 
 
 
-struct __align__(16) Link {
-intptr_t target;
-float weight;
-bool to_remove;
+struct __align__(4) Link {
+int32_t target;
+//float weight;
+//bool to_remove;
 };
 
 /* Add a new link between a source node and a target node.
@@ -69,7 +69,7 @@ __device__ inline bool isLinked(int32_t node, uint32_t target)
 /* Check if node is linking target
  * WARNING: this function acts on SHARED memory and doesn't perform the check on supplementary links array
  */
-__device__ inline bool isLinked(int32_t node, uint32_t target, Link* targets_tile)
+__device__ inline bool isLinked(uint32_t target, Link* targets_tile)
 {
 	uint32_t i;
 	for(i=threadIdx.x*average_links_number; i<(threadIdx.x+1)*average_links_number; i++)
@@ -97,7 +97,7 @@ __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float we
 		if(neighbors_tile[threadIdx.x*average_links_number+i].target==-1)		//there is no need to allocate supplementary space
 			{
 			neighbors_tile[threadIdx.x*average_links_number+i].target=target_id;
-			neighbors_tile[threadIdx.x*average_links_number+i].weight=weight;
+			//neighbors_tile[threadIdx.x*average_links_number+i].weight=weight;
 			return 1;
 		}
 	}
@@ -125,7 +125,7 @@ __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float we
 				temp[0]=neighbors_tile[threadIdx.x*average_links_number+i-2];
 				temp[1]=neighbors_tile[threadIdx.x*average_links_number+i-1];
 				temp[2].target=target_id;
-				temp[2].weight=weight;
+				//temp[2].weight=weight;
 
 				neighbors_tile[threadIdx.x*average_links_number+i-1].target=(intptr_t)temp;   		// supplementary neighbors pointer is stored in last position
 				neighbors_tile[threadIdx.x*average_links_number+i-2].target=-2;					//-2 is the marker that tell us that this node has allocated space for its neighbors list
@@ -141,7 +141,7 @@ __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float we
 			if(temp[i].target!=-1)
 			{
 				temp[i].target=target_id;
-				temp[i].weight=weight;
+				//temp[i].weight=weight;
 				return 3;
 			}
 		}
@@ -152,7 +152,7 @@ __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float we
 __device__ inline void removeLink(uint16_t index, Link* neighborsTile)
 {
 	neighborsTile[index].target=-1;
-	neighborsTile[index].weight=-1;
+	//neighborsTile[index].weight=-1;
 }
 
 #endif /* LINK_HPP_ */
