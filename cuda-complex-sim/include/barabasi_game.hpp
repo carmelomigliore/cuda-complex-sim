@@ -41,8 +41,8 @@ __device__ void barabasi_game(uint16_t initial_nodes, uint16_t links_number, uin
 	uint32_t counter=0; //total link counter
 
 	printf("\nAllocated %d bytes scale-free", (initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2)*sizeof(uint32_t));
-	if(links_linearized_array==NULL) printf("\nCribba");
-	/* We create the first N nodes (==initial_nodes) and link all of them with one another*/
+
+	/* We create the first N nodes (==initial_nodes) and link all of them with one another */
 
 	float2 coord; coord.x=0; coord.y=0;  //fake coordinates
 	uint32_t i=0;

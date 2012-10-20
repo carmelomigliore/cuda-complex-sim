@@ -19,7 +19,7 @@
 #include "device.cuh"
 #include "parameters.hpp"
 
-int main(){
+int main(int argc, char** argv){
 
 	bool* nodes_dev;
 	float2* nodes_coord_dev;
@@ -34,7 +34,17 @@ int main(){
 	int32_t* actives_dev;
 	curandState *d_state;
 
-
+	if (argc!=3)
+	{
+		perror("\nErrore");
+		exit(1);
+	}
+	uint32_t max_nodes=atoi(argv[1]);
+	uint8_t average_links=atoi(argv[2]);
+	uint16_t max_messages=20;		//not needed in our simulation
+	uint32_t active_size=1000;		//not needed in our simulation
+	uint16_t supplementary_size=30; //not needed in our simulation
+	uint16_t barabasi_initial_nodes=atoi(argv[2])+1;
 
 	if(allocateDataStructures(&nodes_dev, &nodes_coord_dev, &task_dev, &task_args_dev, &links_target_dev, &inbox_dev, &outbox_dev, &inbox_counter_dev, &outbox_counter_dev, &d_state, &barabasi_links, &actives_dev, max_nodes,average_links, active_size,supplementary_size, max_messages,barabasi_initial_nodes))
 	{
@@ -50,8 +60,27 @@ int main(){
 	cudaMemGetInfo( &avail, &total );
 	size_t used = total - avail;
 	printf("\nMemoria: totale %d, in uso %d, disponibile: %d", total, used, avail);
-	message_test<<<BLOCKS,THREADS_PER_BLOCK>>>();
-	message_test2nd<<<BLOCKS,THREADS_PER_BLOCK>>>();
-	message_test2nd<<<BLOCKS,THREADS_PER_BLOCK>>>();
+
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	// Start record
+	cudaEventRecord(start, 0);
+
+	message_test<<<BLOCKS,THREADS_PER_BLOCK,average_links*THREADS_PER_BLOCK*sizeof(Link)>>>();
+	message_test2nd<<<BLOCKS,THREADS_PER_BLOCK,average_links*THREADS_PER_BLOCK*sizeof(Link)>>>();
+	message_test2nd<<<BLOCKS,THREADS_PER_BLOCK,average_links*THREADS_PER_BLOCK*sizeof(Link)>>>();
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	float elapsedTime;
+	cudaEventElapsedTime(&elapsedTime, start, stop); // that's our time!
+	// Clean up:
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);
+	FILE *file;
+	file=fopen("times.txt","a");
+	fprintf(file, "%f\n",elapsedTime);
+	fflush(file);
+	fclose(file);
 	cudaThreadExit();
 }

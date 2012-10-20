@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<session version="1" name="cuda-complex-sim.nvvp" hscale="7.850823504238274E-9">
+<executable file="/home/carmelo/git/cuda-complex-sim/cuda-complex-sim/Release/cuda-complex-sim" cwd="/home/carmelo/git/cuda-complex-sim/cuda-complex-sim" args="" launchConfiguration="cuda-complex-sim (1)" timeout="0" profileonstart="true" concurrentkernels="true"><envs></envs></executable>
+<expert><columnprops><column kind="NAME" width="194"/><column kind="DURATION" width="133"/><column kind="BYTE_SIZE" width="84"/></columnprops>
+<columnorder><column kind="NAME"/><column kind="START_TIME"/><column kind="DURATION"/><column kind="AVG_DURATION"/><column kind="GRID_SIZE"/><column kind="BLOCK_SIZE"/><column kind="REGS_PER_THREAD"/><column kind="STAT_SHARED_MEM"/><column kind="DYNA_SHARED_MEM"/><column kind="AVG_DYNA_SHARED_MEM"/><column kind="BYTE_SIZE"/><column kind="THROUGHPUT"/><column kind="EMPTY"/></columnorder>
+</expert>
+<analysis activescope="APPLICATION"><visitedstages><stage name="TIMELINE"/></visitedstages></analysis>
+<vruler width="200"/>
+<hruler>
+</hruler>
+<timelinestate>
+<timeline pathname="3239" kind="PROCESS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="3239/1598080800" kind="THREAD" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="3239/1598080800/Runtime API" kind="RUNTIME" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="3239/1598080800/Driver API" kind="DRIVER" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="3239/Profiling Overhead" kind="OVERHEADS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="GeForce GT 440" kind="DEVICE" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="GeForce GT 440/1" kind="CONTEXT" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="GeForce GT 440/1/MemCpy (HtoD)" kind="MEMCPY_HTOD" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="GeForce GT 440/1/Compute" kind="KERNELS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="GeForce GT 440/1/Compute/scale_free(curandStateXORWOW*)" kind="KERNEL" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="GeForce GT 440/1/Compute/message_test2nd(void)" kind="KERNEL" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="GeForce GT 440/1/Compute/message_test(void)" kind="KERNEL" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="GeForce GT 440/1/Compute/init_stuff(curandStateXORWOW*, __int64)" kind="KERNEL" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="GeForce GT 440/1/Streams" kind="STREAMS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="GeForce GT 440/1/Streams/1" kind="STREAM" containerstate="OPEN_ALL" filtered="false"/>
+</timelinestate>
+<pdm>
+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</pdm>
+</session>

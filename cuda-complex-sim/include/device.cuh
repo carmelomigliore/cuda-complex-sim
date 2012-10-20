@@ -243,25 +243,7 @@ __global__ void test (){
 	if(tid==0)
 	{
 		uint8_t i=0;
-		while(i<25)
-		{
-			printf("\nCristoCristo %d",i);
-			printf("\nCristenzo %d", targets_tile[ltid*average_links_number+i].target);
-			printf("\nDiocristo %d", links_targets_array[i+tid*average_links_number].target);
-			i++;
-		}
-			printf("\nCristogesu %d", addLink(tid,2, 100, targets_tile));
-			printf("\nCristogesu %d", addLink(tid,3, 100, targets_tile));
-			printf("\nCristogesu %d", addLink(tid,4, 100, targets_tile));
-			printf("\nCristogesu %d", addLink(tid,5, 100, targets_tile));
-			printf("\nCristogesu %d", addLink(tid,6, 100, targets_tile));
-			printf("\nCristogesu %d", addLink(tid,7, 100, targets_tile));
-			printf("\nCristogesu %d", addLink(tid,8, 100, targets_tile));
-			printf("\nCristogesu %d", addLink(tid,9, 100, targets_tile));
-			printf("\nCristogesu %d", addLink(tid,10, 100, targets_tile));
 
-			printf("\nGadda da vida %d", targets_tile[160].target);
-			//printf("\nGadda da vida %d", links_targets_array[0].target);
 	}
 
 	/*uint8_t i = 0;
@@ -346,7 +328,7 @@ __global__ void scale_free(curandState *state)
 __global__ void message_test()
 {
 	uint32_t gtid = threadIdx.x + blockIdx.x*blockDim.x;
-	__shared__ Link tile [average_links*THREADS_PER_BLOCK];
+	extern __shared__ Link tile [];
 	while(gtid<max_nodes_number)
 	{
 		generateMessages(tile,max_nodes_number,gtid,30);
@@ -356,7 +338,7 @@ __global__ void message_test()
 __global__ void message_test2nd()
 {
 	uint32_t gtid = threadIdx.x + blockIdx.x*blockDim.x;
-	__shared__ Link targets_tile [average_links*THREADS_PER_BLOCK];
+	extern __shared__ Link targets_tile [];
 	while(gtid<max_nodes_number)
 	{
 		checkInbox(targets_tile,gtid);
@@ -366,7 +348,7 @@ __global__ void message_test2nd()
 
 __global__ void print()
 {
-	printf("\nFail count %d",*fail_count);
+	printf("\n%d %d",max_nodes_number,average_links_number);
 }
 
 __global__ void reset()
