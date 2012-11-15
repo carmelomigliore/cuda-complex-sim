@@ -28,7 +28,7 @@
 
 
 
-/* Frorward declarations */
+/* Forward declarations */
 struct Link;
 struct task_arguments;
 struct message_t;

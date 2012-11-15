@@ -41,7 +41,7 @@ int main(int argc, char** argv){
 	}
 	uint32_t max_nodes=atoi(argv[1]);
 	uint8_t average_links=atoi(argv[2]);
-	uint16_t max_messages=20;		//not needed in our simulation porco dio
+	uint16_t max_messages=20;		//not needed in our simulation
 	uint32_t active_size=1000;		//not needed in our simulation
 	uint16_t supplementary_size=30; //not needed in our simulation
 	uint16_t barabasi_initial_nodes=atoi(argv[2])+1;
