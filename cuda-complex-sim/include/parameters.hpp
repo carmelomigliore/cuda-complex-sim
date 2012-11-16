@@ -45,7 +45,7 @@ __constant__ uint16_t message_queue_size;
 uint32_t h_max_nodes_number;
 uint8_t h_average_links_number;
 uint32_t h_active_nodes_array_size;
- uint16_t h_supplementary_links_array_size;
+uint16_t h_supplementary_links_array_size;
 
 /* Nodes arrays addresses */
 __constant__ bool* nodes_array;

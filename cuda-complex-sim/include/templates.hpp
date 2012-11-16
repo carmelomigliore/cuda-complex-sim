@@ -85,4 +85,5 @@ __device__ inline void copyFromTile(T* target, T* tile, int32_t start, uint16_t 
 	}
 }
 
+
 #endif /* TEMPLATES_HPP_ */
