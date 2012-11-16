@@ -87,6 +87,68 @@ __device__ inline bool isLinked(uint32_t target, Link* targets_tile)
  * WARNING: To be used ONLY after neighbors array has been copied in a tile in shared memory.
  */
 
+__host__ inline uint8_t h_addLink(int32_t source_id, int32_t target_id, float weight, Link* neighbors_tile){
+
+	uint16_t i;
+
+for(i=0; i<h_average_links_number;i++){
+	if(neighbors_tile[source_id*h_average_links_number+i].target==-1){
+		neighbors_tile[source_id*h_average_links_number+i].target = target_id;
+		//neigbors_tile[source_id*h_average_links_number+i].weight = weight;
+		return 1;
+	}
+}
+
+Link* temp;
+	if(neighbors_tile[source_id*h_average_links_number+i-2].target!=-2)		//supplementary space has not been allocated yet
+	{
+		temp = (Link*)malloc(h_supplementary_links_array_size*sizeof(Link));
+
+				/* Initializes the supplementary array to -1 */
+
+				uint16_t j=0;
+				Link init;
+				init.target=-1;
+				while(j<h_supplementary_links_array_size)
+				{
+					temp[j]=init;
+					j++;
+				}
+
+// Copy neighbours_tile's last 2 elements in the first 2 elements of temp,
+// adds the new link and finally save temp's address in neighbours_tile
+
+		temp[0]=neighbors_tile[source_id*h_average_links_number+i-2];
+		temp[1]=neighbors_tile[source_id*h_average_links_number+i-1];
+		temp[2].target=target_id;
+		//temp[2].weight=weight;
+
+		neighbors_tile[source_id*h_average_links_number+i-1].target=(intptr_t)temp;   		// supplementary neighbors pointer is stored in last position
+		neighbors_tile[source_id*h_average_links_number+i-2].target=-2;					//-2 is the marker that tell us that this node has allocated space for its neighbors list
+		return 2;
+			}
+
+	else  								//supplementary space has been allocated previously
+		{
+			temp=(Link*)neighbors_tile[source_id*h_average_links_number+i-1].target;
+
+			#pragma unroll
+			for(i=0;i<h_supplementary_links_array_size;i++)
+			{
+				if(temp[i].target!=-1)
+				{
+					temp[i].target=target_id;
+					//temp[i].weight=weight;
+					return 3;
+				}
+			}
+			return 4;		//an error has occurred
+		}
+
+
+
+
+}
 __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float weight, Link* neighbors_tile)
 {
 	uint16_t i;
@@ -101,7 +163,6 @@ __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float we
 			return 1;
 		}
 	}
-
 
 	Link* temp;
 	if(neighbors_tile[threadIdx.x*average_links_number+i-2].target!=-2)		//supplementary space has not been allocated yet

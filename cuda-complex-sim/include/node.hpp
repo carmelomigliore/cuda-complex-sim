@@ -41,6 +41,12 @@ __device__ inline float calculateDistance(float2 c1, float2 c2){
 	 * 	Create a node and add it to the nodes array. Node creation can be done in parallel.
 	 */
 
+__host__ inline void h_addNode(int32_t id, float2 coord){
+	h_nodes_array[id]=true;
+	// h_nodes_coord_array[id]=coord;
+}
+
+
  __device__ inline void addNode(int32_t id, float2 coord){  //TODO la lista dei nodi deve essere costruita in modo ordinato (i vicini devono essere vicini anche come indici)
 	 nodes_array[id]=true;
 	// nodes_coord_array[id]=coord;

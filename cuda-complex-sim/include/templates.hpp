@@ -33,7 +33,7 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
 
 /*
  * Used to copy a piece of an array from global memory INTO a tile in shared memory. The number of elements in the piece is: blockDim.x*elements_per_thread
- * Nota bene: adesso funziona, per favore di cristo non toccarla piï¿½.
+ * Nota bene: adesso funziona, per favore di cristo non toccarla più.
  */
 
 template <typename T>

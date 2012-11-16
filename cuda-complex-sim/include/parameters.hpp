@@ -41,14 +41,23 @@ __constant__ uint32_t active_nodes_array_size;
 __constant__ uint16_t supplementary_links_array_size;
 __constant__ uint16_t message_queue_size;
 
+/* Global constants for host network creation */
+uint32_t h_max_nodes_number;
+uint8_t h_average_links_number;
+uint32_t h_active_nodes_array_size;
+ uint16_t h_supplementary_links_array_size;
+
 /* Nodes arrays addresses */
 __constant__ bool* nodes_array;
 __constant__ float2* nodes_coord_array;
+/* Node Arrays for host network creation */
+	bool* h_nodes_array;
+	float2* h_nodes_coord_array;
 
 /* Links arrays addresses */
 __constant__ Link* links_targets_array;  //node's id is signed
-//TODO importante l'array dei link ai vicini va caricato (a pezzi) sulla shared memory.
-
+/* Link Array for host network creation */
+	Link* h_links_target_array;
 
 /* Task arrays addresses */
 __constant__ task_t* task_array;
@@ -59,6 +68,8 @@ __constant__ message_t* message_array;
 __constant__ message_t* outbox_array;
 __constant__ int32_t* message_counter;
 __constant__ int16_t* outbox_counter;
+/* Message Array for host network creation */
+	message_t* h_message_array;
 
 /* Curand state address */
 __constant__ curandState* cstate;
