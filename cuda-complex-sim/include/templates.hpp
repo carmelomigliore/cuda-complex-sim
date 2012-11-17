@@ -68,8 +68,6 @@ __device__ inline T* copyToTileReadAhead(T* source, T* tile, int32_t start, uint
 
 	return tile+blockDim.x*elements_per_thread;
 }
-
-
 /*
  * Used to copy back from a tile in shared memory to an array in global memory
  */
@@ -85,5 +83,16 @@ __device__ inline void copyFromTile(T* target, T* tile, int32_t start, uint16_t 
 	}
 }
 
+template <typename T>
+__host__ inline void copyToDevice(T* source, T* target, int32_t start, int32_t end ){
+	uint16_t i = 0;
+
+	for(i=start; i<=end;i++){
+		target[i] = source[i];
+	}
+	}
+
+
+}
 
 #endif /* TEMPLATES_HPP_ */

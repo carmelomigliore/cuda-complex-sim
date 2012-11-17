@@ -35,8 +35,28 @@
 using namespace std;
 
 
+/*Used to copy a piece of an array from Host to Device
+* h_source is the address of the host source array at the index "start"
+ */
+template <typename T>
+__host__ inline void copyToDevice(T* h_source, T* d_target, int32_t start, int32_t size ){
+	if(cudaMemcpy(d_target,h_source,(size*sizeof(T)), cudaMemcpyHostToDevice)!= cudaSuccess){
+		cerr << "\nCouldn't copy date to Device from Host";
+		}
+	}
+
+/*Used to copy a piece of an array from Device to Host
+* h_target is the address of the target host array at the index "start"
+ */
+template <typename T>
+__host__ inline void copyFromDevice(T* d_source, T* h_target,int32_t start, int32_t size){
+	if(cudaMemcpy(h_target,d_source,(size*sizeof(T)), cudaMemcpyDeviceToHost) != cudaSuccess){
+		cerr << "\nCouldn't copy date to Host From Device";
+	}
+}
+
 /*
- * Initializes all data structures on device. Preallocate all needed memory. TODO: write a template kernel that initialize all the arrays.
+ * Initializes all data structures on device. Preallocate all needed memory.
  */
 
 
