@@ -50,14 +50,14 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size,uint32_t* bar
 
 	h_nodes_array = (bool*)malloc(max_nodes*sizeof(bool));
 	if(h_nodes_array == NULL){
-		cerr << "\nCouldn't allocate memory on device 1";
+		cerr << "\nCouldn't allocate memory on host 1";
 			return false;
 		}
 	printf("\nAllocated %d bytes",max_nodes*sizeof(bool));
 
 	/* h_nodes_coord_array = (float2*)malloc(max_nodes*sizeof(float2));
 			if(h_nodes_coord_array == NULL){
-		cerr << "\nCouldn't allocate memory on device 2";
+		cerr << "\nCouldn't allocate memory on host 2";
 			return false;
 		}
 */
@@ -67,14 +67,14 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size,uint32_t* bar
 
 	h_links_target_array = (link*)malloc(max_nodes*avg_links*sizeof(link));
 	if(h_links_target_array==NULL){
-		cerr << "\nCouldn't allocate memory on device 5";
+		cerr << "\nCouldn't allocate memory on host 3";
 				return false;
 	}
 	printf("\nAllocated %d bytes",max_nodes*avg_links*sizeof(Link));
 
 	/*actives_host = (int32_t*)malloc(active_size*sizeof(int32_t));
 	 * if(actives_host == NULL){
-	 * cerr << "\nCouldn't allocate memory on device";
+	 * cerr << "\nCouldn't allocate memory on host 4";
 		return false;
 	}*/
 
@@ -84,7 +84,7 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size,uint32_t* bar
 	h_message_array = (int32_t*)malloc(max_nodes*sizeof(message_t));
 	if(h_message_array == NULL){
 
-		cerr << "\nCouldn't allocate memory on device 6";
+		cerr << "\nCouldn't allocate memory on host 5";
 		return false;
 	}
 
@@ -93,20 +93,21 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size,uint32_t* bar
 	barabasi_links= (uint32_t*)malloc(barabasi_initial_nodes*(barabasi_initial_nodes-1)*2+(max_nodes-barabasi_initial_nodes)*avg_links*2)*sizeof(uint32_t);
 	if(barabasi_links == NULL)
 	{
-		cerr << "\nCouldn't allocate memory on device 11";
+		cerr << "\nCouldn't allocate memory on host 6";
 		return false;
 	}
 	uint32_t* count;
 	count=(uint32_t*)malloc(sizeof(uint32_t));
 		if(count == NULL)
 		{
-				cerr << "\nCouldn't allocate memory on device 11";
+				cerr << "\nCouldn't allocate memory on host 7";
 				return false;
 		}
 */
 	/* Success! */
 	return true;
 }
+
 
 
 #endif /* HOST_HPP_ */

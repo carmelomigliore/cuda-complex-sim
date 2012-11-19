@@ -32,12 +32,11 @@
 #include "barabasi_game.hpp"
 #include "templates.hpp"
 
-using namespace std;
 
 
 /*Used to copy a piece of an array from Host to Device
 * h_source is the address of the host source array at the index "start"
- */
+*/
 template <typename T>
 __host__ inline void copyToDevice(T* h_source, T* d_target, int32_t start, int32_t size ){
 	if(cudaMemcpy(d_target,h_source,(size*sizeof(T)), cudaMemcpyHostToDevice)!= cudaSuccess){

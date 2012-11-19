@@ -21,7 +21,6 @@
 
 #include <stdint.h>
 
-
 #include "math.h"
 #include "parameters.hpp"
 #include "node_resource.hpp"
@@ -41,9 +40,8 @@ __device__ inline float calculateDistance(float2 c1, float2 c2){
 	 * 	Create a node and add it to the nodes array. Node creation can be done in parallel.
 	 */
 
-__host__ inline void h_addNode(int32_t id, float2 coord){
+__host__ inline void h_addNode(int32_t id){
 	h_nodes_array[id]=true;
-	// h_nodes_coord_array[id]=coord;
 }
 
 

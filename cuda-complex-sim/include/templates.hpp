@@ -19,6 +19,20 @@
 #ifndef TEMPLATES_HPP_
 #define TEMPLATES_HPP_
 
+#include <iostream>
+#include <stdint.h>
+#include <stdio.h>
+
+using namespace std;
+
+template <typename T>
+__device__ inline void h_initArray(T initValue, T* hostArray, uint32_t arrayDimension){
+	uint32_t tid = 0;
+	while(tid<arrayDimension){
+		hostArray[tid]=initValue;
+		tid++;
+	}
+}
 
 template <typename T>
 __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimension){
@@ -28,9 +42,22 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
 		devArray[tid]=initValue;
 		tid+=gridDim.x*gridDim.y*gridDim.z*blockDim.x*blockDim.y*blockDim.z; //increments by the number of total threads
 	}
-};
+}
 
+//Allocate memory for Attributes Array
+template <typename T>
+__host__ inline void initAttrArray(){
+	h_nodes_attr_array= (T*)malloc(h_max_nodes_number*sizeof(T*));
+	if(h_nodes_attr_array == NULL){
+		cerr << "\nCouldn't allocate memory on host 1";
+	}
+}
 
+/*template <typename T>
+__host__ inline void addAttribute(T attr, uint32_t node){
+	h_nodes_attr_array[node] = (void*)attr;
+}
+*/
 /*
  * Used to copy a piece of an array from global memory INTO a tile in shared memory. The number of elements in the piece is: blockDim.x*elements_per_thread
  * Nota bene: adesso funziona, per favore di cristo non toccarla più.
@@ -83,16 +110,6 @@ __device__ inline void copyFromTile(T* target, T* tile, int32_t start, uint16_t 
 	}
 }
 
-template <typename T>
-__host__ inline void copyToDevice(T* source, T* target, int32_t start, int32_t end ){
-	uint16_t i = 0;
 
-	for(i=start; i<=end;i++){
-		target[i] = source[i];
-	}
-	}
-
-
-}
 
 #endif /* TEMPLATES_HPP_ */

@@ -87,7 +87,7 @@ __device__ inline bool isLinked(uint32_t target, Link* targets_tile)
  * WARNING: To be used ONLY after neighbors array has been copied in a tile in shared memory.
  */
 
-__host__ inline uint8_t h_addLink(int32_t source_id, int32_t target_id, float weight){
+__host__ inline uint8_t h_addLink(int32_t source_id, int32_t target_id){
 
 	uint16_t i;
 

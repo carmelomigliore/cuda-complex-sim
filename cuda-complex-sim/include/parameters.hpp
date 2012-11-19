@@ -53,6 +53,7 @@ __constant__ float2* nodes_coord_array;
 /* Node Arrays for host network creation */
 	bool* h_nodes_array;
 	float2* h_nodes_coord_array;
+	void* h_nodes_attr_array;
 
 /* Links arrays addresses */
 __constant__ Link* links_targets_array;  //node's id is signed
