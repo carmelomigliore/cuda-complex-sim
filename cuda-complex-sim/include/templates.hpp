@@ -26,7 +26,7 @@
 using namespace std;
 
 template <typename T>
-__device__ inline void h_initArray(T initValue, T* hostArray, uint32_t arrayDimension){
+__host__ inline void h_initArray(T initValue, T* hostArray, uint32_t arrayDimension){
 	uint32_t tid = 0;
 	while(tid<arrayDimension){
 		hostArray[tid]=initValue;

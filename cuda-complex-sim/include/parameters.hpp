@@ -20,7 +20,7 @@
 #define PARAMETERS_HPP_
 
 #include <stdint.h>
-
+#include "curand_kernel.h"
 
 #define BLOCKS 256
 

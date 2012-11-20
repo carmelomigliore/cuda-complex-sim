@@ -29,7 +29,6 @@
 #include "parameters.hpp"
 #include "message.hpp"
 #include "task.hpp"
-#include "barabasi_game.hpp"
 #include "templates.hpp"
 
 using namespace std;
@@ -38,11 +37,11 @@ using namespace std;
  * Initializes all data structures on host. Preallocate all needed memory.
  */
 
-__host__ bool h_allocateDataStructures(uint16_t supplementary_size,uint32_t* barabasi_links, int32_t* actives_host, uint32_t max_nodes, uint8_t avg_links, uint32_t active_size, uint16_t barabasi_initial_nodes){
+__host__ bool h_allocateDataStructures(uint16_t supplementary_size, uint32_t max_nodes, uint8_t avg_links){
 
 	h_max_nodes_number = max_nodes;
 	h_average_links_number = avg_links;
-	h_active_nodes_array_size = active_size;
+//	h_active_nodes_array_size = active_size;
 	h_supplementary_links_array_size =supplementary_size;
 
 
@@ -65,7 +64,7 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size,uint32_t* bar
 
 	/* allocate links arrays */
 
-	h_links_target_array = (link*)malloc(max_nodes*avg_links*sizeof(link));
+	h_links_target_array = (Link*)malloc(max_nodes*avg_links*sizeof(Link));
 	if(h_links_target_array==NULL){
 		cerr << "\nCouldn't allocate memory on host 3";
 				return false;
@@ -81,29 +80,13 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size,uint32_t* bar
 
 	/* Allocate messages arrays */
 
-	h_message_array = (int32_t*)malloc(max_nodes*sizeof(message_t));
+	h_message_array = (message_t*)malloc(max_nodes*sizeof(message_t));
 	if(h_message_array == NULL){
 
 		cerr << "\nCouldn't allocate memory on host 5";
 		return false;
 	}
 
-	/*Barabasi parameters */
-/*
-	barabasi_links= (uint32_t*)malloc(barabasi_initial_nodes*(barabasi_initial_nodes-1)*2+(max_nodes-barabasi_initial_nodes)*avg_links*2)*sizeof(uint32_t);
-	if(barabasi_links == NULL)
-	{
-		cerr << "\nCouldn't allocate memory on host 6";
-		return false;
-	}
-	uint32_t* count;
-	count=(uint32_t*)malloc(sizeof(uint32_t));
-		if(count == NULL)
-		{
-				cerr << "\nCouldn't allocate memory on host 7";
-				return false;
-		}
-*/
 	/* Success! */
 	return true;
 }
