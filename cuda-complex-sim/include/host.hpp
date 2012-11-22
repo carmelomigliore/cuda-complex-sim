@@ -23,12 +23,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "curand_kernel.h"
 #include "node.hpp"
 #include "link.hpp"
 #include "parameters.hpp"
 #include "message.hpp"
-#include "task.hpp"
 #include "templates.hpp"
 
 using namespace std;

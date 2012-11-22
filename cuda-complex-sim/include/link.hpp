@@ -26,7 +26,7 @@
 
 
 struct __align__(4) Link {
-int32_t target;
+intptr_t target;
 //float weight;
 //bool to_remove;
 };
