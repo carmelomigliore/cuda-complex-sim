@@ -110,7 +110,6 @@ __host__ void adjlistToCompactList(Graph g){
 
 	        for_each(vertices(g).first, vertices(g).second,
            exercise_vertex<Graph>(g));
-
 }
 
 __host__ void CompactListToAdjList(Graph* g){
@@ -153,6 +152,15 @@ __host__ void CompactListToAdjList(Graph* g){
 
 		}
 	}
+}
+
+__host__ void calcParameters(Graph g)
+{
+	 int nodes = boost::num_vertices(g);
+	 int edges = num_edges(g);
+	 h_max_nodes_number = nodes;
+	 h_average_links_number= edges/nodes;
+
 }
 
 

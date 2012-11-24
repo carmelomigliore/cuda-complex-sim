@@ -65,6 +65,20 @@ __device__ inline bool isLinked(int32_t node, uint32_t target)
 	return false;
 }
 
+__host__ inline bool h_isLinked(int32_t node,uint32_t target)
+{
+	uint32_t i;
+		for(i=node*h_average_links_number; i<(node+1)*h_average_links_number; i++)
+		{
+			if(h_links_target_array[i].target==target)
+			{
+				return true;
+			}
+		}
+		return false;
+
+}
+
 
 /* Check if node is linking target
  * WARNING: this function acts on SHARED memory and doesn't perform the check on supplementary links array

@@ -81,4 +81,10 @@ __constant__ uint16_t initial_nodes;
 
 __constant__ uint32_t* fail_count;
 
+/*Host Barabasi parameters */
+
+uint32_t* h_links_linearized_array;
+uint16_t h_initial_nodes;
+uint32_t* h_fail_count;
+
 #endif /* PARAMETERS_HPP_ */

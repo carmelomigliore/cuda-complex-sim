@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Carmelo Migliore
+/* Copyright (C) 2012 Carmelo Migliore, Fabrizio Gueli
  * 
  * This file is part of Cuda-complex-sim
  * 

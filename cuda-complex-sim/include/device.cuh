@@ -39,7 +39,7 @@
 */
 template <typename T>
 __host__ inline void copyToDevice(T* h_source, T* d_target, int32_t start, int32_t size ){
-	if(cudaMemcpy(d_target,h_source,(size*sizeof(T)), cudaMemcpyHostToDevice)!= cudaSuccess){
+	if(cudaMemcpy(d_target,h_source+start,(size*sizeof(T)), cudaMemcpyHostToDevice)!= cudaSuccess){
 		cerr << "\nCouldn't copy date to Device from Host";
 		}
 	}
@@ -49,10 +49,12 @@ __host__ inline void copyToDevice(T* h_source, T* d_target, int32_t start, int32
  */
 template <typename T>
 __host__ inline void copyFromDevice(T* d_source, T* h_target,int32_t start, int32_t size){
-	if(cudaMemcpy(h_target,d_source,(size*sizeof(T)), cudaMemcpyDeviceToHost) != cudaSuccess){
+	if(cudaMemcpy(h_target,d_source+start,(size*sizeof(T)), cudaMemcpyDeviceToHost) != cudaSuccess){
 		cerr << "\nCouldn't copy date to Host From Device";
 	}
 }
+
+
 
 /*
  * Initializes all data structures on device. Preallocate all needed memory.
@@ -321,7 +323,19 @@ int idx = blockIdx.x * blockDim.x + threadIdx.x;
 curand_init(seed, idx, 0, &state[idx]);
 }
 
+__global__ void init_data()
+{
+		Link init;
+			init.target=-1;
+			initArray<bool>(false,nodes_array,max_nodes_number);
+			initArray<Link>(init, links_targets_array, max_nodes_number*average_links_number);
+			//initArray<task_t>(NULL, task_array, max_nodes_number);
+			//initArray<int32_t>(0,message_counter,max_nodes_number);
+			//initArray<int16_t>(0,outbox_counter,max_nodes_number);
 
+			__syncthreads();
+
+}
 
 __global__ void scale_free(curandState *state)
 {
@@ -335,7 +349,7 @@ __global__ void scale_free(curandState *state)
 		//initArray<task_t>(NULL, task_array, max_nodes_number);
 		//initArray<int32_t>(0,message_counter,max_nodes_number);
 		//initArray<int16_t>(0,outbox_counter,max_nodes_number);
-		*fail_count=0;
+	*fail_count=0;
 		__syncthreads();
 
 		if(gtid==0)
