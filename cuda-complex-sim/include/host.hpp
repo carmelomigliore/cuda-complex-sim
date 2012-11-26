@@ -45,12 +45,12 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size/*, uint32_t m
 
 	/* allocate nodes array */
 
-	h_nodes_array = (bool*)malloc(max_nodes*sizeof(bool));
+	h_nodes_array = (bool*)malloc(h_max_nodes_number*sizeof(bool));
 	if(h_nodes_array == NULL){
 		cerr << "\nCouldn't allocate memory on host 1";
 			return false;
 		}
-	printf("\nAllocated %d bytes",max_nodes*sizeof(bool));
+	printf("\nAllocated %d bytes",h_max_nodes_number*sizeof(bool));
 
 	/* h_nodes_coord_array = (float2*)malloc(max_nodes*sizeof(float2));
 			if(h_nodes_coord_array == NULL){
@@ -62,12 +62,12 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size/*, uint32_t m
 
 	/* allocate links arrays */
 
-	h_links_target_array = (Link*)malloc(max_nodes*avg_links*sizeof(Link));
+	h_links_target_array = (Link*)malloc(h_max_nodes_number*h_average_links_number*sizeof(Link));
 	if(h_links_target_array==NULL){
 		cerr << "\nCouldn't allocate memory on host 3";
 				return false;
 	}
-	printf("\nAllocated %d bytes",max_nodes*avg_links*sizeof(Link));
+	printf("\nAllocated %d bytes",h_max_nodes_number*h_average_links_number*sizeof(Link));
 
 	/*actives_host = (int32_t*)malloc(active_size*sizeof(int32_t));
 	 * if(actives_host == NULL){
@@ -78,7 +78,7 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size/*, uint32_t m
 
 	/* Allocate messages arrays */
 
-	h_message_array = (message_t*)malloc(max_nodes*sizeof(message_t));
+	h_message_array = (message_t*)malloc(h_max_nodes_number*sizeof(message_t));
 	if(h_message_array == NULL){
 
 		cerr << "\nCouldn't allocate memory on host 5";

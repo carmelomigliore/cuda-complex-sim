@@ -325,7 +325,7 @@ curand_init(seed, idx, 0, &state[idx]);
 
 __global__ void init_data()
 {
-		Link init;
+			Link init;
 			init.target=-1;
 			initArray<bool>(false,nodes_array,max_nodes_number);
 			initArray<Link>(init, links_targets_array, max_nodes_number*average_links_number);

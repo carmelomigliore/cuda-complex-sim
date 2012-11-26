@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Carmelo Migliore
+/* Copyright (C) 2012 Carmelo Migliore, Fabrizio Gueli
  * 
  * This file is part of Cuda-complex-sim
  * 
@@ -28,7 +28,8 @@
 #include "templates.hpp"
 #include "graph_transf.hpp"
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int_distribution.hpp> //ultima versione di boost
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
 
 /* Generates a scale-free network using Barabasi's algorithm */
 
@@ -115,7 +116,18 @@ __host__ Graph h_barabasi_game(uint16_t initial_nodes, uint16_t links_number, ui
 		 * It will be used to simulate probability.
 		 * (initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2)
 		 */
-	boost::random::mt19937 gen;
+
+	h_links_linearized_array = (uint32_t*)malloc((initial_nodes*(initial_nodes-1)*2+(max_nodes-initial_nodes)*links_number*2)*sizeof(uint32_t));
+	if(h_links_linearized_array==NULL){
+			cerr << "\nCouldn't allocate memory on host 6";
+					return false;
+		}
+
+
+
+	boost::mt19937 gen;
+	unsigned int rseed = static_cast<unsigned int>(time(0));
+	gen.seed(static_cast<unsigned int>(rseed)); // ok
 
 
 		Graph g;
@@ -144,8 +156,8 @@ __host__ Graph h_barabasi_game(uint16_t initial_nodes, uint16_t links_number, ui
 				else
 				{
 					add_edge(i, j, g);
-					links_linearized_array[counter]= i; //source and target are added to links_linearized_array
-					links_linearized_array[counter+1]= j;
+					h_links_linearized_array[counter]= i; //source and target are added to links_linearized_array
+					h_links_linearized_array[counter+1]= j;
 					counter+=2;
 				}
 			}
@@ -156,7 +168,8 @@ __host__ Graph h_barabasi_game(uint16_t initial_nodes, uint16_t links_number, ui
 		uint32_t random;
 		uint32_t random_node;
 		bool flag;
-		boost::random::uniform_int_distribution<> dist(0, counter);
+		boost::uniform_int<> dist(0, counter);
+		boost::variate_generator<boost::mt19937&, boost::uniform_int<> > die(gen, dist);
 		for(i=initial_nodes; i< max_nodes; i++)
 		{
 			add_vertex(g);
@@ -169,17 +182,17 @@ __host__ Graph h_barabasi_game(uint16_t initial_nodes, uint16_t links_number, ui
 				 */
 				while(flag)
 				{
-					random = dist(gen);		//generates a number between 0 and counter
+					random = die();		//generates a number between 0 and counter
 					//printf("\nDino %1.10f", curand_uniform(state));
-					random_node=links_linearized_array[random];
+					random_node=h_links_linearized_array[random];
 					if (!h_isLinked(i,random_node) && random_node!=i)
 					{
 						flag=false; //exit while
 					}
 				}
 				add_edge(i, random_node, g);
-				links_linearized_array[counter]= i;			//Add the new link source and target to links_linearized_array
-				links_linearized_array[counter+1]= random_node;
+				h_links_linearized_array[counter]= i;			//Add the new link source and target to links_linearized_array
+				h_links_linearized_array[counter+1]= random_node;
 				counter+=2;
 			}
 		}
