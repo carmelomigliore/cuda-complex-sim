@@ -22,8 +22,13 @@
 #include <iostream>
 #include <stdint.h>
 #include <stdio.h>
+#include "parameters.hpp"
 
 using namespace std;
+
+/*
+ * Template used to initialize an host Array
+ */
 
 template <typename T>
 __host__ inline void h_initArray(T initValue, T* hostArray, uint32_t arrayDimension){
@@ -33,6 +38,10 @@ __host__ inline void h_initArray(T initValue, T* hostArray, uint32_t arrayDimens
 		tid++;
 	}
 }
+
+/*
+ * Template used to initialize a Device Array
+ */
 
 template <typename T>
 __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimension){
@@ -44,23 +53,28 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
 	}
 }
 
-//Allocate memory for Attributes Array
+/*
+ * Used to allocate memory for User Attribute's Array
+ */
 template <typename T>
 __host__ inline void initAttrArray(){
-	h_nodes_attr_array= (T*)malloc(h_max_nodes_number*sizeof(T*));
-	if(h_nodes_attr_array == NULL){
-		cerr << "\nCouldn't allocate memory on host 1";
+	h_nodes_userattr_array= malloc(h_max_nodes_number*sizeof(T));
+	if(h_nodes_userattr_array == NULL){
+		cerr << "\nCouldn't allocate memory on host 7";
 	}
 }
 
-/*template <typename T>
+/*
+ * Function used to add an user attribute in the Attribute's Array
+ */
+template <typename T>
 __host__ inline void addAttribute(T attr, uint32_t node){
-	h_nodes_attr_array[node] = (void*)attr;
+	((T*)h_nodes_userattr_array)[node] = attr;
 }
-*/
+
 /*
  * Used to copy a piece of an array from global memory INTO a tile in shared memory. The number of elements in the piece is: blockDim.x*elements_per_thread
- * Nota bene: adesso funziona, per favore di cristo non toccarla più.
+ *
  */
 
 template <typename T>

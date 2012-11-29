@@ -25,7 +25,7 @@
 
 
 
-struct __align__(4) Link {
+struct __align__(8) Link {
 intptr_t target;
 //float weight;
 //bool to_remove;

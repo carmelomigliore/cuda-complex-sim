@@ -28,6 +28,7 @@
 #include "parameters.hpp"
 #include "message.hpp"
 #include "templates.hpp"
+#include "graph_transf.hpp"
 
 using namespace std;
 
@@ -84,6 +85,14 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size/*, uint32_t m
 		cerr << "\nCouldn't allocate memory on host 5";
 		return false;
 	}
+
+	h_nodes_programattr_array = (n_attribute*)malloc(h_max_nodes_number*sizeof(n_attribute));
+	if(h_nodes_programattr_array == NULL){
+
+			cerr << "\nCouldn't allocate memory on host 5";
+			return false;
+		}
+
 
 	/* Success! */
 	return true;

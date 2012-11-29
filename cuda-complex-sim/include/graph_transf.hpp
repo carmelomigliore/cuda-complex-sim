@@ -33,24 +33,27 @@
 
 
 #include "node.hpp"
-#include "link.hpp"
-#include "parameters.hpp"
 
 using namespace std;
 using namespace boost;
 
+
 struct n_attribute{
 	n_attribute() : active(true){}
 	bool active;
-	void* nuser_defined;
 };
-
 
 struct l_attribute{
 	void* luser_defined;
 };
 
+//#ifndef DIRECTED
 typedef adjacency_list<vecS, vecS, directedS,n_attribute,l_attribute> Graph;
+
+//#elif UNDIRECTED
+//typedef adjacency_list<vecS, vecS, undirectedS,n_attribute,l_attribute> Graph;
+
+//#endif
 
 
 
@@ -105,6 +108,7 @@ __host__ void adjlistToCompactList(Graph g){
 	        for (vp = vertices(g); vp.first != vp.second; ++vp.first){
 	        	int32_t n = (int32_t) index[*vp.first];
 	        	 h_addNode(n);
+	        	 h_nodes_programattr_array[n]= g[n];
 
 	        }
 
@@ -121,6 +125,7 @@ __host__ void CompactListToAdjList(Graph* g){
 		if(h_nodes_array[v] == -1)
 		{
 			(*g)[v].active = false;
+			h_nodes_programattr_array[v].active = false;
 		}
 	}
 	typedef std::pair<int, int> Edge;
@@ -154,11 +159,17 @@ __host__ void CompactListToAdjList(Graph* g){
 	}
 }
 
+/*
+ * Function that calculates the maximum number of nodes and average links number given a Graph
+ */
 __host__ void calcParameters(Graph g)
 {
 	 int nodes = boost::num_vertices(g);
 	 int edges = num_edges(g);
 	 h_max_nodes_number = nodes;
+	 if(edges/nodes == 0)
+		h_average_links_number=2;
+	 else
 	 h_average_links_number= edges/nodes;
 
 }

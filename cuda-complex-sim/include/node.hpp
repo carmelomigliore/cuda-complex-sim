@@ -22,8 +22,6 @@
 #include <stdint.h>
 
 #include "math.h"
-#include "parameters.hpp"
-#include "node_resource.hpp"
 #include "link.hpp"
 
 
@@ -47,24 +45,6 @@ __host__ inline void h_addNode(int32_t id){
 
  __device__ inline void addNode(int32_t id, float2 coord){
 	 nodes_array[id]=true;
-	// nodes_coord_array[id]=coord;
-
-	 /*__syncthreads();
-
-	 if(id!=0)
-	 {
-		 links_targets_array[id*average_links_number].target=id-1;
-		 links_targets_array[id*average_links_number].weight=calculateDistance(coord,nodes_coord_array[id-1]);
-		 links_targets_array[id*average_links_number].to_remove=false;
-		 //printf("\nenzos : %d", links_targets_array[id*average_links_number].target);
-	 }
-	 else
-	 {
-		 links_targets_array[0].target=1;
-		 links_targets_array[0].weight=calculateDistance(coord,nodes_coord_array[1]);
-		 links_targets_array[0].to_remove=false;
-	 }
-	 */
  }
 
 #endif /* NODES_HPP_ */

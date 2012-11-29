@@ -29,6 +29,7 @@
 
 
 /* Forward declarations */
+struct n_attribute;
 struct Link;
 struct task_arguments;
 struct message_t;
@@ -50,32 +51,40 @@ uint16_t h_supplementary_links_array_size;
 /* Nodes arrays addresses */
 __constant__ bool* nodes_array;
 __constant__ float2* nodes_coord_array;
+
 /* Node Arrays for host network creation */
 	bool* h_nodes_array;
 	float2* h_nodes_coord_array;
-	void* h_nodes_attr_array;
 
-/* Links arrays addresses */
+/* Attribute Array */
+	void* h_nodes_userattr_array;
+	n_attribute* h_nodes_programattr_array;
+	__constant__ void* nodes_userattr_array;
+	__constant__ n_attribute* nodes_programattr_array;
+
+/* Device Links arrays addresses */
 __constant__ Link* links_targets_array;  //node's id is signed
+
 /* Link Array for host network creation */
 	Link* h_links_target_array;
 
-/* Task arrays addresses */
+/* Device Task arrays addresses */
 __constant__ task_t* task_array;
 __constant__ task_arguments* task_arguments_array;
 
-/* Message array address */
+/* Device Message array address */
 __constant__ message_t* message_array;
 __constant__ message_t* outbox_array;
 __constant__ int32_t* message_counter;
 __constant__ int16_t* outbox_counter;
+
 /* Message Array for host network creation */
 	message_t* h_message_array;
 
 /* Curand state address */
 __constant__ curandState* cstate;
 
-/*Barabasi parameters */
+/*Device Barabasi parameters */
 __constant__ uint32_t* links_linearized_array;
 __constant__ uint16_t initial_nodes;
 
