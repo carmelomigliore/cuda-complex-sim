@@ -54,15 +54,29 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
 }
 
 /*
- * Used to allocate memory for User Attribute's Array
+ * Used to allocate memory (Host) for User Attribute's Array
  */
 template <typename T>
-__host__ inline void initAttrArray(){
+__host__ inline void h_initAttrArray(){
 	h_nodes_userattr_array= malloc(h_max_nodes_number*sizeof(T));
 	if(h_nodes_userattr_array == NULL){
 		cerr << "\nCouldn't allocate memory on host 7";
 	}
 }
+
+/*
+ * Used to allocate memory (Device) for User Attribute's Array
+ */
+template <typename T>
+__host__ inline void initAttrArray(T* usr_array){
+	if(cudaMalloc((void**)usr_array,max_nodes_number*sizeof(T))!=cudaSuccess){
+			cerr << "\nCouldn't allocate memory on device";
+		}
+	if(cudaMemcpyToSymbol(nodes_userattr_array, usr_array, sizeof(T*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+			cerr << "\nCouldn't allocate memory on device";
+		}
+}
+
 
 /*
  * Function used to add an user attribute in the Attribute's Array
@@ -78,7 +92,7 @@ __host__ inline void addAttribute(T attr, uint32_t node){
  */
 
 template <typename T>
-__device__ inline void copyToTile(T* source, T* tile, int32_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Cosï¿½ ad esempio se ï¿½ uguale a 5 e ogni blocco ï¿½ formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
+__device__ inline void copyToTile(T* source, T* tile, int32_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. CosÌ ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
 	uint16_t tid=threadIdx.x; 																		//thread index in this block
 	#pragma unroll
 	while(tid<blockDim.x*elements_per_thread)
@@ -114,7 +128,7 @@ __device__ inline T* copyToTileReadAhead(T* source, T* tile, int32_t start, uint
  */
 
 template <typename T>
-__device__ inline void copyFromTile(T* target, T* tile, int32_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Cosï¿½ ad esempio se ï¿½ uguale a 5 e ogni blocco ï¿½ formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
+__device__ inline void copyFromTile(T* target, T* tile, int32_t start, uint16_t elements_per_thread, int16_t tile_offset){		//elements_per_thread indica quanti elementi deve copiare ciascun thread. Così ad esempio se è uguale a 5 e ogni blocco è formato da 10 thread, in totale verranno copiati nella shared memory 50 elementi
 	uint16_t tid=threadIdx.x; 																		//thread index in this block
 	#pragma unroll
 	while(tid<blockDim.x*elements_per_thread)

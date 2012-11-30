@@ -37,7 +37,9 @@
 using namespace std;
 using namespace boost;
 
-
+/*
+ * Struct used to define Developer node's attributes
+ */
 struct n_attribute{
 	n_attribute() : active(true){}
 	bool active;
@@ -99,6 +101,9 @@ struct exercise_vertex {
   Graph& g;
 };
 
+/*
+ * Function used to Transform a "Boost-Graph" Adjacency List to a "CudaComplexSim" Compact List
+ */
 __host__ void adjlistToCompactList(Graph g){
 
 	typedef property_map<Graph, vertex_index_t>::type IndexMap;
@@ -116,13 +121,16 @@ __host__ void adjlistToCompactList(Graph g){
            exercise_vertex<Graph>(g));
 }
 
+/*
+ * Function used to Transform a "CudaComplexSim" Compact List to a Boost-Graph" Adjacency List
+ */
 __host__ void CompactListToAdjList(Graph* g){
 
 	(*g).clear();
 	for(uint32_t v=0; v<h_max_nodes_number;v++)
 	{
 		add_vertex(*g);
-		if(h_nodes_array[v] == -1)
+		if(h_nodes_array[v] == -1)  //Se sul device è stato cancellato un nodo esso verrà settato come "non attivo"
 		{
 			(*g)[v].active = false;
 			h_nodes_programattr_array[v].active = false;
@@ -137,12 +145,12 @@ __host__ void CompactListToAdjList(Graph* g){
 		for(uint16_t j=0; j<h_average_links_number;j++)
 		{
 			if(h_links_target_array[i*h_average_links_number+j].target!=-1 && h_links_target_array[i*h_average_links_number+j].target!=-2 )
-			{
+			{// Se il link è presente e non è presente la lista di trabocco
 				t = h_links_target_array[i*h_average_links_number+j].target;
 				add_edge(i, t, *g);
 			}
 			else if(h_links_target_array[i*h_average_links_number+j].target==-2)
-			{
+			{ //Se è presente la lista di trabocco
 				temp= (Link*)h_links_target_array[i*h_average_links_number+j+1].target;
 				for(uint16_t k=0; k<h_supplementary_links_array_size;k++)
 				{

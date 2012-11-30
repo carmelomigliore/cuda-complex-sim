@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 #include "curand_kernel.h"
+#include <vector>
 
 #define BLOCKS 256
 
@@ -38,23 +39,19 @@ typedef bool (*task_t) (void* in, void **out); //generic task
 /* Global constants */
 __constant__ uint32_t max_nodes_number;
 __constant__ uint8_t average_links_number;
-__constant__ uint32_t active_nodes_array_size;
 __constant__ uint16_t supplementary_links_array_size;
 __constant__ uint16_t message_queue_size;
 
 /* Global constants for host network creation */
 uint32_t h_max_nodes_number;
 uint8_t h_average_links_number;
-uint32_t h_active_nodes_array_size;
 uint16_t h_supplementary_links_array_size;
 
 /* Nodes arrays addresses */
 __constant__ bool* nodes_array;
-__constant__ float2* nodes_coord_array;
 
 /* Node Arrays for host network creation */
 	bool* h_nodes_array;
-	float2* h_nodes_coord_array;
 
 /* Attribute Array */
 	void* h_nodes_userattr_array;
@@ -74,12 +71,17 @@ __constant__ task_arguments* task_arguments_array;
 
 /* Device Message array address */
 __constant__ message_t* message_array;
-__constant__ message_t* outbox_array;
-__constant__ int32_t* message_counter;
-__constant__ int16_t* outbox_counter;
+//__constant__ message_t* outbox_array; da eliminare
+//__constant__ int32_t* message_counter;
+//__constant__ int16_t* outbox_counter;
 
 /* Message Array for host network creation */
 	message_t* h_message_array;
+
+/* Supplementary Array address vector */
+	std::vector<intptr_t> h_addr;
+	std::vector<intptr_t> d_addr;
+
 
 /* Curand state address */
 __constant__ curandState* cstate;
@@ -88,12 +90,9 @@ __constant__ curandState* cstate;
 __constant__ uint32_t* links_linearized_array;
 __constant__ uint16_t initial_nodes;
 
-__constant__ uint32_t* fail_count;
-
 /*Host Barabasi parameters */
 
 uint32_t* h_links_linearized_array;
 uint16_t h_initial_nodes;
-uint32_t* h_fail_count;
 
 #endif /* PARAMETERS_HPP_ */

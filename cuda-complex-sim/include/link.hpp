@@ -27,8 +27,6 @@
 
 struct __align__(8) Link {
 intptr_t target;
-//float weight;
-//bool to_remove;
 };
 
 /* Add a new link between a source node and a target node.
@@ -223,13 +221,11 @@ __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float we
 
 __host__ inline void h_removeLink(uint16_t index){
 	h_links_target_array[index].target=-1;
-		//h_links_targets_array[index].weight=-1;
 }
 
 __device__ inline void removeLink(uint16_t index)
 {
 	links_targets_array[index].target=-1;
-	//links_targets_array[index].weight=-1;
 }
 
 #endif /* LINK_HPP_ */

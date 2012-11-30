@@ -123,8 +123,6 @@ __host__ Graph h_barabasi_game(uint16_t initial_nodes, uint16_t links_number, ui
 					return false;
 		}
 
-
-
 	boost::mt19937 gen;
 	unsigned int rseed = static_cast<unsigned int>(time(0));
 	gen.seed(static_cast<unsigned int>(rseed)); // ok

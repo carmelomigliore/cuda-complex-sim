@@ -20,12 +20,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "node.hpp"
-#include "link.hpp"
-#include "parameters.hpp"
 #include "host.hpp"
-#include "templates.hpp"
 #include "graph_transf.hpp"
+#include "templates.hpp"
 
 
 #include <utility>                   // for std::pair
@@ -98,14 +95,12 @@
 
 
 
-int host_test(){
-
+int main(){
 
     //Number of vertices of the Graph
     const int num_vertices = 30;
     // Declare a graph object
  Graph g(num_vertices);
-
     // writing out the edges in the graph
     typedef std::pair<int, int> Edge;
 
@@ -130,25 +125,28 @@ add_edge(4,24, g);
 add_edge(4,25, g);
 
 
-int i = 0;
+calcParameters(g);
 
 //Allocate memory for Host Compact List (Supplementary Link array size, max nodes number, average links number)
-h_allocateDataStructures(200, 30, 5);
+h_allocateDataStructures(200);
+printf("Numero nodi :%d\n",h_max_nodes_number);
+printf("Numero average_edges :%d\n",h_average_links_number);
 Link p;
 p.target = -1;
+
+
 //Initialize Nodes Array and Links Array
-h_initArray(false,h_nodes_array,30);
-h_initArray(p,h_links_target_array,5*30);
+h_initArray<bool>(false,h_nodes_array,30);
+h_initArray<Link>(p,h_links_target_array,h_average_links_number*30);
 //Convert Boost adjacency list to Compact List
 adjlistToCompactList(g);
-
 
 int j = 0;
 for(j=0; j<30; j++){
 printf("Scorro L'array dei nodi[%d]= %d\n",j,h_nodes_array[j]);
 }
 
-for(j=0; j<5*30; j++){
+for(j=0; j<h_average_links_number*30; j++){
 printf("Scorro L'array dei link[%d]= %d\n",j,h_links_target_array[j].target);
 }
 
@@ -167,6 +165,8 @@ CompactListToAdjList(&g);
 
   for_each(vertices(g).first, vertices(g).second,
            stampa<Graph>(g));
+
+
 
 return 1;
 }
