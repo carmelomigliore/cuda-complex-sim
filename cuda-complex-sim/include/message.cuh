@@ -16,10 +16,10 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MESSAGE_HPP_
-#define MESSAGE_HPP_
+#ifndef MESSAGE_CUH_
+#define MESSAGE_CUH_
 
-#include "parameters.hpp"
+#include "parameters.cuh"
 
 struct __align__(16) message_t
 {
@@ -38,4 +38,4 @@ __device__ inline bool sendMessage(uint32_t sender, message_t m)
 
 
 
-#endif /* MESSAGE_HPP_ */
+#endif /* MESSAGE_CUH_ */

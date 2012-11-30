@@ -1,7 +1,7 @@
-/* Copyright (C) 2012 Carmelo Migliore, Fabrizio Gueli
- *
+/* Copyright (C) 2012 Carmelo Migliore
+ * 
  * This file is part of Cuda-complex-sim
- *
+ * 
  * Cuda-complex-sim is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation, either
@@ -16,9 +16,23 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef TASK_CUH_
+#define TASK_CUH_
 
-#ifndef NODE_RESOURCE_HPP_
-#define NODE_RESOURCE_HPP_
+#include "parameters.cuh"
+#include <stddef.h>
+
+struct __align__(16) task_arguments{
+	void* in;
+	void* out;
+};
+
+/* Assign a task to nodes. */
+
+__device__ void assignTask(task_t task)
+{
+		*task_array=task;
+}
 
 
-#endif /* NODE_RESOURCE_HPP_ */
+#endif /* TASK_CUH_ */

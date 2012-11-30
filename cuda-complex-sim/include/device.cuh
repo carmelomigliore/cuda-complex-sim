@@ -24,35 +24,17 @@
 #include <stdio.h>
 
 #include "curand_kernel.h"
-#include "node.hpp"
-#include "link.hpp"
-#include "parameters.hpp"
-#include "message.hpp"
-#include "task.hpp"
-#include "barabasi_game.hpp"
-#include "templates.hpp"
+#include "node.cuh"
+#include "link.cuh"
+#include "parameters.cuh"
+#include "message.cuh"
+#include "task.cuh"
+#include "barabasi_game.cuh"
+#include "templates.cuh"
+#include "h_barabasi_game.hpp"
+#include "h_parameters.hpp"
 
 
-
-/*
-* Used to copy a piece of an array from Host to Device
-*/
-template <typename T>
-__host__ inline void copyToDevice(T* h_source, T* d_target, int32_t start, int32_t size ){
-	if(cudaMemcpy(d_target,h_source+start,(size*sizeof(T)), cudaMemcpyHostToDevice)!= cudaSuccess){
-		cerr << "\nCouldn't copy date to Device from Host";
-		}
-	}
-
-/*
-* Used to copy a piece of an array from Device to Host
- */
-template <typename T>
-__host__ inline void copyFromDevice(T* d_source, T* h_target,int32_t start, int32_t size){
-	if(cudaMemcpy(h_target,d_source+start,(size*sizeof(T)), cudaMemcpyDeviceToHost) != cudaSuccess){
-		cerr << "\nCouldn't copy date to Host From Device";
-	}
-}
 
 /*
  * Function used to copy the Supplementary Arrays from host to Device
@@ -289,7 +271,6 @@ __host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, tas
 __global__ void test (){
 
 	uint32_t tid = threadIdx.x + blockIdx.x*blockDim.x;
-	uint32_t ltid = threadIdx.x;
 	if(tid==0)
 	{
 	//	printf("\nNodes: %x, Coord: %x", nodes_array, nodes_coord_array);
@@ -316,11 +297,6 @@ __global__ void test (){
 	Link* targets_tile= copyToTileReadAhead<Link> (links_targets_array,cache, 0,5);
 	__syncthreads();
 
-	if(tid==0)
-	{
-		uint8_t i=0;
-
-	}
 
 	/*uint8_t i = 0;
 	while(i<average_links_number)
@@ -402,7 +378,7 @@ __global__ void scale_free(curandState *state)
 
 		if(gtid==0)
 		{
-			barabasi_game(initial_nodes,average_links_number,max_nodes_number,state);
+			//barabasi_game(initial_nodes,average_links_number,max_nodes_number,state);
 		}
 }
 

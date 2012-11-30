@@ -21,9 +21,7 @@
 #include <stdio.h>
 
 #include "host.hpp"
-#include "graph_transf.hpp"
-#include "templates.hpp"
-
+#include "h_barabasi_game.hpp"
 
 #include <utility>                   // for std::pair
   #include <algorithm>                 // for std::for_each
@@ -97,35 +95,15 @@
 
 int main(){
 
-    //Number of vertices of the Graph
-    const int num_vertices = 30;
-    // Declare a graph object
- Graph g(num_vertices);
+
     // writing out the edges in the graph
     typedef std::pair<int, int> Edge;
 
 
-//for(int i =0; i< 30; i++){
-//	for(int j=0; j<5; j++){
-
-    // add the edges to the graph object
-add_edge(0,1, g);
-add_edge(0,2, g);
-add_edge(0,3, g);
-add_edge(1,2, g);
-add_edge(1,7, g);
-add_edge(2,8, g);
-add_edge(3,10, g);
-add_edge(3,17, g);
-add_edge(4,20, g);
-add_edge(4,21, g);
-add_edge(4,22, g);
-add_edge(4,23, g);
-add_edge(4,24, g);
-add_edge(4,25, g);
-
-
-calcParameters(g);
+Graph g = h_barabasi_game(3,1,100);
+h_average_links_number = 5;
+h_max_nodes_number= 100;
+//calcParameters(g);
 
 //Allocate memory for Host Compact List (Supplementary Link array size, max nodes number, average links number)
 h_allocateDataStructures(200);
@@ -136,17 +114,17 @@ p.target = -1;
 
 
 //Initialize Nodes Array and Links Array
-h_initArray<bool>(false,h_nodes_array,30);
-h_initArray<Link>(p,h_links_target_array,h_average_links_number*30);
+h_initArray<bool>(false,h_nodes_array,100);
+h_initArray<Link>(p,h_links_target_array,h_average_links_number*100);
 //Convert Boost adjacency list to Compact List
 adjlistToCompactList(g);
 
 int j = 0;
-for(j=0; j<30; j++){
+for(j=0; j<h_max_nodes_number; j++){
 printf("Scorro L'array dei nodi[%d]= %d\n",j,h_nodes_array[j]);
 }
 
-for(j=0; j<h_average_links_number*30; j++){
+for(j=0; j<h_average_links_number*100; j++){
 printf("Scorro L'array dei link[%d]= %d\n",j,h_links_target_array[j].target);
 }
 
@@ -170,4 +148,5 @@ CompactListToAdjList(&g);
 
 return 1;
 }
+
 */

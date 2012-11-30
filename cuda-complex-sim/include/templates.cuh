@@ -16,28 +16,17 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TEMPLATES_HPP_
-#define TEMPLATES_HPP_
+#ifndef TEMPLATES_CUH_
+#define TEMPLATES_CUH_
 
 #include <iostream>
 #include <stdint.h>
 #include <stdio.h>
-#include "parameters.hpp"
+#include "parameters.cuh"
+#include "h_parameters.hpp"
 
 using namespace std;
 
-/*
- * Template used to initialize an host Array
- */
-
-template <typename T>
-__host__ inline void h_initArray(T initValue, T* hostArray, uint32_t arrayDimension){
-	uint32_t tid = 0;
-	while(tid<arrayDimension){
-		hostArray[tid]=initValue;
-		tid++;
-	}
-}
 
 /*
  * Template used to initialize a Device Array
@@ -53,38 +42,6 @@ __device__ inline void initArray(T initValue, T* devArray, uint32_t arrayDimensi
 	}
 }
 
-/*
- * Used to allocate memory (Host) for User Attribute's Array
- */
-template <typename T>
-__host__ inline void h_initAttrArray(){
-	h_nodes_userattr_array= malloc(h_max_nodes_number*sizeof(T));
-	if(h_nodes_userattr_array == NULL){
-		cerr << "\nCouldn't allocate memory on host 7";
-	}
-}
-
-/*
- * Used to allocate memory (Device) for User Attribute's Array
- */
-template <typename T>
-__host__ inline void initAttrArray(T* usr_array){
-	if(cudaMalloc((void**)usr_array,max_nodes_number*sizeof(T))!=cudaSuccess){
-			cerr << "\nCouldn't allocate memory on device";
-		}
-	if(cudaMemcpyToSymbol(nodes_userattr_array, usr_array, sizeof(T*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
-			cerr << "\nCouldn't allocate memory on device";
-		}
-}
-
-
-/*
- * Function used to add an user attribute in the Attribute's Array
- */
-template <typename T>
-__host__ inline void addAttribute(T attr, uint32_t node){
-	((T*)h_nodes_userattr_array)[node] = attr;
-}
 
 /*
  * Used to copy a piece of an array from global memory INTO a tile in shared memory. The number of elements in the piece is: blockDim.x*elements_per_thread
@@ -138,6 +95,37 @@ __device__ inline void copyFromTile(T* target, T* tile, int32_t start, uint16_t 
 	}
 }
 
+/*
+* Used to copy a piece of an array from Host to Device
+*/
+template <typename T>
+__host__ inline void copyToDevice(T* h_source, T* d_target, int32_t start, int32_t size ){
+	if(cudaMemcpy(d_target,h_source+start,(size*sizeof(T)), cudaMemcpyHostToDevice)!= cudaSuccess){
+		cerr << "\nCouldn't copy date to Device from Host";
+		}
+	}
 
+/*
+* Used to copy a piece of an array from Device to Host
+ */
+template <typename T>
+__host__ inline void copyFromDevice(T* d_source, T* h_target,int32_t start, int32_t size){
+	if(cudaMemcpy(h_target,d_source+start,(size*sizeof(T)), cudaMemcpyDeviceToHost) != cudaSuccess){
+		cerr << "\nCouldn't copy date to Host From Device";
+	}
+}
 
-#endif /* TEMPLATES_HPP_ */
+/*
+ * Used to allocate memory (Device) for User Attribute's Array
+ */
+template <typename T>
+__host__ inline void initAttrArray(T* usr_array){
+	if(cudaMalloc((void**)usr_array,h_max_nodes_number*sizeof(T))!=cudaSuccess){
+			cerr << "\nCouldn't allocate memory on device";
+		}
+	if(cudaMemcpyToSymbol(nodes_userattr_array, usr_array, sizeof(T*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+			cerr << "\nCouldn't allocate memory on device";
+		}
+}
+
+#endif /* TEMPLATES_CUH_ */

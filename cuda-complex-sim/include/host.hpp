@@ -23,11 +23,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "node.hpp"
-#include "link.hpp"
-#include "parameters.hpp"
-#include "message.hpp"
-#include "templates.hpp"
+#include "h_node.hpp"
+#include "h_link.hpp"
+#include "h_parameters.hpp"
+#include "h_templates.hpp"
 #include "graph_transf.hpp"
 
 using namespace std;
@@ -63,14 +62,8 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size/*, uint32_t m
 	}
 	printf("\nAllocated %d bytes",h_max_nodes_number*h_average_links_number*sizeof(Link));
 
-	/* Allocate messages arrays */
+	/* Allocate attributes arrays */
 
-	h_message_array = (message_t*)malloc(h_max_nodes_number*sizeof(message_t));
-	if(h_message_array == NULL){
-
-		cerr << "\nCouldn't allocate memory on host 5";
-		return false;
-	}
 
 	h_nodes_programattr_array = (n_attribute*)malloc(h_max_nodes_number*sizeof(n_attribute));
 	if(h_nodes_programattr_array == NULL){

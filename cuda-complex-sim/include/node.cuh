@@ -16,13 +16,13 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef NODE_HPP_
-#define NODE_HPP_
+#ifndef NODE_CUH_
+#define NODE_CUH_
 
 #include <stdint.h>
 
 #include "math.h"
-#include "link.hpp"
+#include "parameters.cuh"
 
 
 
@@ -38,13 +38,8 @@ __device__ inline float calculateDistance(float2 c1, float2 c2){
 	 * 	Create a node and add it to the nodes array. Node creation can be done in parallel.
 	 */
 
-__host__ inline void h_addNode(int32_t id){
-	h_nodes_array[id]=true;
-}
-
-
  __device__ inline void addNode(int32_t id, float2 coord){
 	 nodes_array[id]=true;
  }
 
-#endif /* NODES_HPP_ */
+#endif /* NODES_CUH_ */

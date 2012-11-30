@@ -1,7 +1,7 @@
-/* Copyright (C) 2012 Carmelo Migliore
- * 
+/* Copyright (C) 2012  Fabrizio Gueli
+ *
  * This file is part of Cuda-complex-sim
- * 
+ *
  * Cuda-complex-sim is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation, either
@@ -16,23 +16,17 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TASK_HPP_
-#define TASK_HPP_
+#ifndef H_NODE_HPP_
+#define H_NODE_HPP_
 
-#include "parameters.hpp"
-#include <stddef.h>
+#include "h_parameters.hpp"
 
-struct __align__(16) task_arguments{
-	void* in;
-	void* out;
-};
+	/*
+	 * 	Create a node and add it to the nodes array. Node creation can be done in parallel.
+	 */
 
-/* Assign a task to nodes. */
-
-__device__ void assignTask(task_t task)
-{
-		*task_array=task;
+__host__ inline void h_addNode(int32_t id){
+	h_nodes_array[id]=true;
 }
 
-
-#endif /* TASK_HPP_ */
+#endif /* H_NODE_HPP_ */

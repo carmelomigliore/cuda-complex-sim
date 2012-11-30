@@ -32,7 +32,8 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
 
-#include "node.hpp"
+#include "h_node.hpp"
+#include "h_link.hpp"
 
 using namespace std;
 using namespace boost;
