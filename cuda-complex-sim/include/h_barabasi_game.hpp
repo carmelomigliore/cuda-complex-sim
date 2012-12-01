@@ -42,7 +42,7 @@ __host__ Graph h_barabasi_game(uint16_t initial_nodes, uint16_t links_number, ui
 
 	boost::mt19937 gen;
 	unsigned int rseed = static_cast<unsigned int>(time(0));
-	gen.seed(static_cast<unsigned int>(rseed)); // ok
+	gen.seed(static_cast<unsigned int>(rseed));
 
 
 		Graph g;
@@ -99,7 +99,7 @@ __host__ Graph h_barabasi_game(uint16_t initial_nodes, uint16_t links_number, ui
 				{
 					random = die();		//generates a number between 0 and counter
 					random_node=h_links_linearized_array[random];
-					if (!h_isLinked(i,random_node) && random_node!=i)
+					if (!(edge(i,random_node,g).second) && random_node!=i)
 					{
 						flag=false; //exit while
 					}

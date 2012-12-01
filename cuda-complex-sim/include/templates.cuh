@@ -99,7 +99,7 @@ __device__ inline void copyFromTile(T* target, T* tile, int32_t start, uint16_t 
 * Used to copy a piece of an array from Host to Device
 */
 template <typename T>
-__host__ inline void copyToDevice(T* h_source, T* d_target, int32_t start, int32_t size ){
+__host__ inline void copyToDevice(T* d_target,T* h_source, int32_t start, int32_t size ){
 	if(cudaMemcpy(d_target,h_source+start,(size*sizeof(T)), cudaMemcpyHostToDevice)!= cudaSuccess){
 		cerr << "\nCouldn't copy date to Device from Host";
 		}
@@ -109,7 +109,7 @@ __host__ inline void copyToDevice(T* h_source, T* d_target, int32_t start, int32
 * Used to copy a piece of an array from Device to Host
  */
 template <typename T>
-__host__ inline void copyFromDevice(T* d_source, T* h_target,int32_t start, int32_t size){
+__host__ inline void copyFromDevice(T* h_target,T* d_source,int32_t start, int32_t size){
 	if(cudaMemcpy(h_target,d_source+start,(size*sizeof(T)), cudaMemcpyDeviceToHost) != cudaSuccess){
 		cerr << "\nCouldn't copy date to Host From Device";
 	}

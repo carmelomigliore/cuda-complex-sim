@@ -40,7 +40,7 @@
  * Function used to copy the Supplementary Arrays from host to Device
  * WARNING: TO BE USED ONLY AFTER copying link's array to Device
  */
-__host__ void copySupplementaryArrayToDevice()
+__host__ void copySupplementaryArrayToDevice(Link* d_links_array)
 {
 	Link* temp;
 	Link* dev;
@@ -61,7 +61,7 @@ __host__ void copySupplementaryArrayToDevice()
 						{
 							cerr << "\nCouldn't copy date to Host From Device";
 						}
-						if(cudaMemcpy(&links_targets_array[i*h_average_links_number+j+1].target,&dev,h_supplementary_links_array_size*sizeof(Link), cudaMemcpyHostToDevice) != cudaSuccess)
+						if(cudaMemcpy(&d_links_array[i*h_average_links_number+j+1].target,&dev,h_supplementary_links_array_size*sizeof(Link), cudaMemcpyHostToDevice) != cudaSuccess)
 						{
 							cerr << "\nCouldn't copy date to Host From Device";
 						}
@@ -73,7 +73,7 @@ __host__ void copySupplementaryArrayToDevice()
 						{
 							cerr << "\nCouldn't copy date to Host From Device";
 						}
-						if(cudaMemcpy(&links_targets_array[i*h_average_links_number+j+1].target,&d_addr[c],h_supplementary_links_array_size*sizeof(Link), cudaMemcpyHostToDevice) != cudaSuccess)
+						if(cudaMemcpy(&d_links_array[i*h_average_links_number+j+1].target,&d_addr[c],h_supplementary_links_array_size*sizeof(Link), cudaMemcpyHostToDevice) != cudaSuccess)
 						{
 							cerr << "\nCouldn't copy date to Host From Device";
 						}

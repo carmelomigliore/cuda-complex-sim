@@ -52,11 +52,12 @@ int main(int argc, char** argv)
 	// Create graph with 100 nodes
 	h_max_nodes_number = 1000000;
 	h_average_links_number = 1;
+	allocateDataStructures(&prog,&nodes_dev, &task_dev, &task_args_dev, &links_target_dev, &inbox_dev,  &d_state, &barabasi_links, h_max_nodes_number,h_average_links_number,supplementary_size,barabasi_initial_nodes);
+	h_allocateDataStructures(supplementary_size);
 	Graph g = h_barabasi_game(barabasi_initial_nodes, h_average_links_number, h_max_nodes_number);
 
 
-	allocateDataStructures(&prog,&nodes_dev, &task_dev, &task_args_dev, &links_target_dev, &inbox_dev,  &d_state, &barabasi_links, h_max_nodes_number,h_average_links_number,supplementary_size,barabasi_initial_nodes);
-	h_allocateDataStructures(supplementary_size);
+
 
 
 	srand(time(NULL));

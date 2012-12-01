@@ -47,7 +47,6 @@ uint16_t h_supplementary_links_array_size;
 /*Host Barabasi parameters */
 
 	uint32_t* h_links_linearized_array;
-	uint16_t h_initial_nodes;
 
 
 #endif /* PARAMETERS_HPP_ */
