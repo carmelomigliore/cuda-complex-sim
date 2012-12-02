@@ -35,11 +35,11 @@ int main(int argc, char** argv)
 		curandState *d_state;
 		n_attribute *prog;
 
-		if (argc!=3)
-			{
-				perror("\nErrore");
-				exit(1);
-			}
+//		if (argc!=3)
+	//		{
+//				perror("\nErrore");
+//				exit(1);
+//			}
 
 
 //	uint32_t max_nodes=atoi(argv[1]);
@@ -49,11 +49,12 @@ int main(int argc, char** argv)
 	uint16_t barabasi_initial_nodes=10;
 
 
-	// Create graph with 100 nodes
 	h_max_nodes_number = 1000000;
 	h_average_links_number = 1;
+
 	allocateDataStructures(&prog,&nodes_dev, &task_dev, &task_args_dev, &links_target_dev, &inbox_dev,  &d_state, &barabasi_links, h_max_nodes_number,h_average_links_number,supplementary_size,barabasi_initial_nodes);
 	h_allocateDataStructures(supplementary_size);
+
 	Graph g = h_barabasi_game(barabasi_initial_nodes, h_average_links_number, h_max_nodes_number);
 
 
@@ -69,8 +70,8 @@ int main(int argc, char** argv)
 
 	adjlistToCompactList(g);
 
-	copyToDevice(h_nodes_array, nodes_dev, 0, h_max_nodes_number );
-	copyToDevice(h_links_target_array,links_target_dev ,0, h_max_nodes_number*h_average_links_number );
+	copyToDevice(nodes_dev,h_nodes_array , 0, h_max_nodes_number );
+	copyToDevice(links_target_dev,h_links_target_array ,0, h_max_nodes_number*h_average_links_number );
 
   	size_t avail;
   	size_t total;

@@ -55,7 +55,7 @@ __host__ void copySupplementaryArrayToDevice(Link* d_links_array)
 					h_addr.push_back((intptr_t)temp);
 					if(d_addr.empty())
 					{
-						if(cudaMalloc((void**)dev,h_supplementary_links_array_size*sizeof(Link))!=cudaSuccess)
+						if(cudaMalloc((void**)&dev,h_supplementary_links_array_size*sizeof(Link))!=cudaSuccess)
 							cerr << "\nCouldn't allocate memory on device";
 						if(cudaMemcpy(dev,temp,h_supplementary_links_array_size*sizeof(Link), cudaMemcpyHostToDevice) != cudaSuccess)
 						{
@@ -378,7 +378,7 @@ __global__ void scale_free(curandState *state)
 
 		if(gtid==0)
 		{
-			//barabasi_game(initial_nodes,average_links_number,max_nodes_number,state);
+			barabasi_game(initial_nodes,average_links_number,max_nodes_number,state);
 		}
 }
 

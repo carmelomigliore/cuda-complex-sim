@@ -53,11 +53,23 @@ __device__ inline bool addLink(int32_t source_id, int32_t target_id)
 __device__ inline bool isLinked(int32_t node, uint32_t target)
 {
 	uint32_t i;
+	Link* temp;
 	for(i=node*average_links_number; i<(node+1)*average_links_number; i++)
 	{
 		if(links_targets_array[i].target==target)
 		{
 			return true;
+		}
+		else if(links_targets_array[i].target == -2)
+		{
+			temp= (Link*)links_targets_array[i+1].target;
+			for(uint16_t k=0; k<supplementary_links_array_size;k++)
+			{
+				if(temp[k].target == target)
+				{
+					return true;
+				}
+			}
 		}
 	}
 	return false;
@@ -72,12 +84,24 @@ __device__ inline bool isLinked(int32_t node, uint32_t target)
 __device__ inline bool isLinked(uint32_t target, Link* targets_tile)
 {
 	uint32_t i;
+	Link* temp;
 	for(i=threadIdx.x*average_links_number; i<(threadIdx.x+1)*average_links_number; i++)
 	{
 		if(targets_tile[i].target==target)
 		{
 			return true;
 		}
+		else if(targets_tile[i].target == -2)
+			{
+				temp= (Link*)targets_tile[i+1].target;
+				for(uint16_t k=0; k<supplementary_links_array_size;k++)
+				{
+					if(temp[k].target == target)
+					{
+						return true;
+					}
+				}
+			}
 	}
 	return false;
 }

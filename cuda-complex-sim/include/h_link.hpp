@@ -27,16 +27,27 @@
 __host__ inline bool h_isLinked(int32_t node,uint32_t target)
 {
 	uint32_t i;
+		Link* temp;
 		for(i=node*h_average_links_number; i<(node+1)*h_average_links_number; i++)
 		{
 			if(h_links_target_array[i].target==target)
 			{
 				return true;
 			}
+			else if(h_links_target_array[i].target == -2)
+			{
+				temp= (Link*)h_links_target_array[i+1].target;
+				for(uint16_t k=0; k<h_supplementary_links_array_size;k++)
+				{
+					if(temp[k].target == target)
+					{
+						return true;
+					}
+				}
+			}
 		}
 		return false;
-
-}
+	}
 
 /*
  * Add a new link between a source node and a target node.
