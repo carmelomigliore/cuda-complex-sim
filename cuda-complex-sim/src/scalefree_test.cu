@@ -46,32 +46,32 @@ int main(int argc, char** argv)
 //	uint8_t average_links=atoi(argv[2]);
 	uint16_t supplementary_size= 10;
 
-	uint16_t barabasi_initial_nodes=10;
+	uint16_t barabasi_initial_nodes=3;
 
 
-	h_max_nodes_number = 1000000;
-	h_average_links_number = 1;
+	uint32_t max_nodes = 1000000;
+	uint8_t average_links= 1;
 
-	allocateDataStructures(&prog,&nodes_dev, &task_dev, &task_args_dev, &links_target_dev, &inbox_dev,  &d_state, &barabasi_links, h_max_nodes_number,h_average_links_number,supplementary_size,barabasi_initial_nodes);
-	h_allocateDataStructures(supplementary_size);
+	allocateDataStructures(&prog,&nodes_dev, &task_dev, &task_args_dev, &links_target_dev, &inbox_dev,  &d_state, &barabasi_links, max_nodes,average_links,supplementary_size,barabasi_initial_nodes);
+	h_allocateDataStructures(supplementary_size,max_nodes,average_links);
 
-	Graph g = h_barabasi_game(barabasi_initial_nodes, h_average_links_number, h_max_nodes_number);
-
+	Graph g = h_barabasi_game(barabasi_initial_nodes, 1, max_nodes);
+	startSimulation(links_target_dev,nodes_dev,supplementary_size,max_nodes,average_links,g);
 
 
 
 
 	srand(time(NULL));
-	Link init;
-	init.target=-1;
-	init_data<<<BLOCKS,THREADS_PER_BLOCK>>>();
-	h_initArray<bool>(false,h_nodes_array,h_max_nodes_number);
-	h_initArray<Link>(init, h_links_target_array, h_max_nodes_number*h_average_links_number);
+//	Link init;
+//	init.target=-1;
+//	init_data<<<BLOCKS,THREADS_PER_BLOCK>>>();
+//	h_initArray<bool>(false,h_nodes_array,h_max_nodes_number);
+//	h_initArray<Link>(init, h_links_target_array, h_max_nodes_number*h_average_links_number);
 
-	adjlistToCompactList(g);
+//	adjlistToCompactList(g);
 
-	copyToDevice(nodes_dev,h_nodes_array , 0, h_max_nodes_number );
-	copyToDevice(links_target_dev,h_links_target_array ,0, h_max_nodes_number*h_average_links_number );
+//	copyToDevice(nodes_dev,h_nodes_array , 0, h_max_nodes_number );
+//	copyToDevice(links_target_dev,h_links_target_array ,0, h_max_nodes_number*h_average_links_number );
 
   	size_t avail;
   	size_t total;

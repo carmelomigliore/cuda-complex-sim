@@ -36,6 +36,10 @@
 
 
 
+
+
+
+
 /*
  * Function used to copy the Supplementary Arrays from host to Device
  * WARNING: TO BE USED ONLY AFTER copying link's array to Device
@@ -268,6 +272,7 @@ __host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, tas
 }
 
 
+
 __global__ void test (){
 
 	uint32_t tid = threadIdx.x + blockIdx.x*blockDim.x;
@@ -281,8 +286,6 @@ __global__ void test (){
 
 	Link init;
 	init.target=-1;
-	//init.weight=-1;
-	//init.to_remove=false;
 	initArray<bool>(false,nodes_array,30000);
 	initArray<Link>(init, links_targets_array, 30000*5);
 	initArray<task_t>(NULL, task_array, 30000);

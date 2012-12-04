@@ -28,6 +28,7 @@
 #include "h_parameters.hpp"
 #include "h_templates.hpp"
 #include "graph_transf.hpp"
+#include "device.cuh"
 
 using namespace std;
 
@@ -35,11 +36,10 @@ using namespace std;
  * Initializes all data structures on host. Preallocate all needed memory.
  */
 
-__host__ bool h_allocateDataStructures(uint16_t supplementary_size/*, uint32_t max_nodes, uint8_t avg_links*/){
+__host__ bool h_allocateDataStructures(uint16_t supplementary_size, uint32_t max_nodes, uint8_t avg_links){
 
-//	h_max_nodes_number = max_nodes;
-//	h_average_links_number = avg_links;
-//	h_active_nodes_array_size = active_size;
+	h_max_nodes_number = max_nodes;
+	h_average_links_number = avg_links;
 	h_supplementary_links_array_size =supplementary_size;
 
 
@@ -75,6 +75,18 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size/*, uint32_t m
 
 	/* Success! */
 	return true;
+}
+
+__host__ void startSimulation(Link* links,bool* nodes,uint16_t supplementary_size, uint32_t max_nodes, uint8_t avg_links,Graph g)
+{
+	Link init;
+	init.target=-1;
+	init_data<<<BLOCKS,THREADS_PER_BLOCK>>>();
+	h_initArray<bool>(false,h_nodes_array,h_max_nodes_number);
+	h_initArray<Link>(init, h_links_target_array, h_max_nodes_number*h_average_links_number);
+	adjlistToCompactList(g);
+	copyToDevice(nodes,h_nodes_array , 0, h_max_nodes_number );
+	copyToDevice(links,h_links_target_array ,0, h_max_nodes_number*h_average_links_number );
 }
 
 
