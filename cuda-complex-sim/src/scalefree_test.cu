@@ -31,8 +31,6 @@ int main(int argc, char** argv)
 		task_t* task_dev;
 		task_arguments* task_args_dev;
 		message_t* inbox_dev;
-		uint32_t* barabasi_links;
-		curandState *d_state;
 		n_attribute *prog;
 
 //		if (argc!=3)
@@ -52,11 +50,11 @@ int main(int argc, char** argv)
 	uint32_t max_nodes = 1000000;
 	uint8_t average_links= 1;
 
-	allocateDataStructures(&prog,&nodes_dev, &task_dev, &task_args_dev, &links_target_dev, &inbox_dev,  &d_state, &barabasi_links, max_nodes,average_links,supplementary_size,barabasi_initial_nodes);
+	allocateDataStructures(&prog,&nodes_dev, &task_dev, &task_args_dev, &links_target_dev, &inbox_dev,max_nodes,average_links,supplementary_size);
 	h_allocateDataStructures(supplementary_size,max_nodes,average_links);
 
 	Graph g = h_barabasi_game(barabasi_initial_nodes, 1, max_nodes);
-	startSimulation(links_target_dev,nodes_dev,supplementary_size,max_nodes,average_links,g);
+	startSimulation(links_target_dev,nodes_dev,supplementary_size,g);
 
 
 

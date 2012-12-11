@@ -77,7 +77,11 @@ __host__ bool h_allocateDataStructures(uint16_t supplementary_size, uint32_t max
 	return true;
 }
 
-__host__ void startSimulation(Link* links,bool* nodes,uint16_t supplementary_size, uint32_t max_nodes, uint8_t avg_links,Graph g)
+/*
+ * Function that initializes the structures, transforms the boost adjacency list in a Compact list and copies the structures to Device
+ * WARINING: TO BE USED only after allocating memory
+ */
+__host__ void startSimulation(Link* links,bool* nodes,uint16_t supplementary_size,Graph g)
 {
 	Link init;
 	init.target=-1;
@@ -87,6 +91,18 @@ __host__ void startSimulation(Link* links,bool* nodes,uint16_t supplementary_siz
 	adjlistToCompactList(g);
 	copyToDevice(nodes,h_nodes_array , 0, h_max_nodes_number );
 	copyToDevice(links,h_links_target_array ,0, h_max_nodes_number*h_average_links_number );
+}
+
+/*
+ * Function that copies structures to Host from Device and transforms the compact list in a boost adjacency list
+ * To use to exploit Boost-Graph Algorithm on Host
+ */
+__host__ void hostComputing(Link* links,bool* nodes,uint16_t supplementary_size,Graph g)
+{
+	copyFromDevice(h_nodes_array,nodes, 0, h_max_nodes_number );
+	copyFromDevice(h_links_target_array ,links,0, h_max_nodes_number*h_average_links_number );
+	CompactListToAdjList(&g);
+
 }
 
 

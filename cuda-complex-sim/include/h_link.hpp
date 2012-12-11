@@ -24,6 +24,10 @@
 #include "link.cuh"
 
 
+/*
+ * Check if node is linking target (This is Host Function)
+ */
+
 __host__ inline bool h_isLinked(int32_t node,uint32_t target)
 {
 	uint32_t i;
@@ -50,8 +54,7 @@ __host__ inline bool h_isLinked(int32_t node,uint32_t target)
 	}
 
 /*
- * Add a new link between a source node and a target node.
- * WARNING: To be used ONLY after neighbors array has been copied in a tile in shared memory.
+ * Add a new link between a source node and a target node. (This is a Host Function)
  */
 
 __host__ inline uint8_t h_addLink(int32_t source_id, int32_t target_id){
