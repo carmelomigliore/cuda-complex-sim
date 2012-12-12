@@ -65,7 +65,7 @@ __host__ void copySupplementaryArrayToDevice(Link* d_links_array)
 						{
 							cerr << "\nCouldn't copy date to Host From Device";
 						}
-						if(cudaMemcpy(&d_links_array[i*h_average_links_number+j+1].target,&dev,h_supplementary_links_array_size*sizeof(Link), cudaMemcpyHostToDevice) != cudaSuccess)
+						if(cudaMemcpy(&d_links_array[i*h_average_links_number+j+1].target,&dev,sizeof(Link), cudaMemcpyHostToDevice) != cudaSuccess)
 						{
 							cerr << "\nCouldn't copy date to Host From Device";
 						}
@@ -141,7 +141,7 @@ __host__ void copySupplementaryArrayFromDevice()
  */
 
 
-__host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, task_t** task_dev, task_arguments** task_args_dev, Link** links_target_dev, message_t** inbox_dev, uint32_t max_nodes, uint8_t avg_links, uint16_t supplementary_size/*, curandState** d_state, uint32_t** barabasi_links, uint16_t barabasi_initial_nodes*/){
+__host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, task_t** task_dev, task_arguments** task_args_dev, Link** links_target_dev, message_t** inbox_dev, uint32_t max_nodes, uint8_t avg_links, uint16_t supplementary_size, curandState** d_state/*, uint32_t** barabasi_links, uint16_t barabasi_initial_nodes*/){
 
 	/* allocate nodes array */
 
@@ -188,13 +188,13 @@ __host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, tas
 
 
 	/* Allocate curand seeds array */
-	/*
+
 
 	if(cudaMalloc((void**)d_state, BLOCKS*THREADS_PER_BLOCK*sizeof(curandState))!=cudaSuccess)
 	{
 		cerr << "\nCouldn't allocate memory on device 10";
 		return false;
-	} */
+	}
 
 	/*Barabasi parameters */
 
@@ -254,10 +254,10 @@ __host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, tas
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	}
-/*	if(cudaMemcpyToSymbol(cstate, d_state, sizeof(curandState*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	if(cudaMemcpyToSymbol(cstate, d_state, sizeof(curandState*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
-	}*/
+	}
 	if(cudaMemcpyToSymbol(message_array, inbox_dev, sizeof(message_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
