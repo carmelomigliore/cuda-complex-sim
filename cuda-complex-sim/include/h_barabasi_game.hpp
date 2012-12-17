@@ -27,7 +27,9 @@
 #include "h_templates.hpp"
 #include "h_link.hpp"
 
-/* Generates a scale-free network using Barabasi's algorithm */
+/* Generates a scale-free network using Barabasi's algorithm
+ * It returns the generated graph
+ */
 
 __host__ Graph h_barabasi_game(uint16_t initial_nodes, uint16_t links_number, uint32_t max_nodes)
 {

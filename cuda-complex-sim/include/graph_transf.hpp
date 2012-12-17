@@ -123,7 +123,7 @@ __host__ void adjlistToCompactList(Graph g){
 }
 
 /*
- * Function used to Transform a "CudaComplexSim" Compact List to a Boost-Graph" Adjacency List
+ * Function used to Transform a "CudaComplexSim" Compact List to a "Boost-Graph" Adjacency List
  */
 __host__ void CompactListToAdjList(Graph* g){
 

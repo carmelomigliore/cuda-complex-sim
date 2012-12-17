@@ -107,7 +107,7 @@ __device__ inline bool isLinked(uint32_t target, Link* targets_tile)
 }
 
 
-__device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float weight)
+__device__ inline uint8_t addLink2(int32_t source_id, int32_t target_id)
 {
 	uint16_t i;
 
@@ -168,6 +168,27 @@ __device__ inline uint8_t addLink(int32_t source_id, int32_t target_id, float we
 __device__ inline void removeLink(uint16_t index)
 {
 	links_targets_array[index].target=-1;
+}
+
+__device__ inline void removeLink(uint16_t node, uint16_t node2)
+{
+	Link* temp;
+	for(uint32_t i= node*average_links_number; i< (node+1)*average_links_number; i++)
+	{
+		if(links_targets_array[i].target == node2)
+			links_targets_array[i].target= -1;
+
+		else if(links_targets_array[i].target == -2)
+		{
+		temp= (Link*)h_links_target_array[i+1].target;
+		for(uint32_t k = 0; k<supplementary_links_array_size ; k++)
+		{
+		if(temp[k].target == node2)
+			temp[k].target = -1;
+		}
+		break;
+		}
+	}
 }
 
 #endif /* LINK_CUH_ */

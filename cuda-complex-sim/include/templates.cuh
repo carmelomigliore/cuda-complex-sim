@@ -76,7 +76,7 @@ __device__ inline T* copyToTileReadAhead(T* source, T* tile, int32_t start, uint
 		copyToTile <T> (source, tile, start-blockDim.x*elements_per_thread, elements_per_thread,0); //copy the elements of the block before the current block
 	}
 	copyToTile <T> (source, tile, start, elements_per_thread,blockDim.x*elements_per_thread); //copy the elements of the current block
-	copyToTile <T> (source, tile, start+blockDim.x*elements_per_thread, elements_per_thread,2*blockDim.x*elements_per_thread); //copy the elments of the block next to the current block
+	copyToTile <T> (source, tile, start+blockDim.x*elements_per_thread, elements_per_thread,2*blockDim.x*elements_per_thread); //copy the elements of the block next to the current block
 
 	return tile+blockDim.x*elements_per_thread;
 }
