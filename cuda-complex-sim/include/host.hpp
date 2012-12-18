@@ -95,7 +95,7 @@ __host__ void startSimulation(Link* links,bool* nodes,uint16_t supplementary_siz
 
 /*
  * Function that copies structures to Host from Device and transforms the compact list in a boost adjacency list
- * To use to exploit Boost-Graph Algorithm on Host
+ * Warning: To use to exploit Boost-Graph Algorithm on Host
  */
 __host__ void hostComputing(Link* links,bool* nodes,uint16_t supplementary_size,Graph g)
 {

@@ -21,6 +21,7 @@
 #include "host.hpp"
 #include "graph_transf.hpp"
 #include "h_barabasi_game.hpp"
+#include "hygra.cuh"
 
 
 int main(int argc, char** argv)

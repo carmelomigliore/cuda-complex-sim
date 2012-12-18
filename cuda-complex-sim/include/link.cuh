@@ -114,15 +114,15 @@ __device__ inline uint8_t addLink2(int32_t source_id, int32_t target_id)
 	#pragma unroll
 
 	for(i=0;i<average_links_number;i++){
-		if(links_targets_array[threadIdx.x*average_links_number+i].target==-1)		//there is no need to allocate supplementary space
+		if(links_targets_array[source_id*average_links_number+i].target==-1)		//there is no need to allocate supplementary space
 			{
-			links_targets_array[threadIdx.x*average_links_number+i].target=target_id;
+			links_targets_array[source_id*average_links_number+i].target=target_id;
 			return 1;
 		}
 	}
 
 	Link* temp;
-	if(links_targets_array[threadIdx.x*average_links_number+i-2].target!=-2)		//supplementary space has not been allocated yet
+	if(links_targets_array[source_id*average_links_number+i-2].target!=-2)		//supplementary space has not been allocated yet
 	{
 		temp = (Link*)malloc(supplementary_links_array_size*sizeof(Link));
 
@@ -140,17 +140,17 @@ __device__ inline uint8_t addLink2(int32_t source_id, int32_t target_id)
 				// Copy neighbours_tile's last 2 elements in the first 2 elements of temp,
 				// adds the new link and finally save temp's address in neighbours_tile
 
-				temp[0]=links_targets_array[threadIdx.x*average_links_number+i-2];
-				temp[1]=links_targets_array[threadIdx.x*average_links_number+i-1];
+				temp[0]=links_targets_array[source_id*average_links_number+i-2];
+				temp[1]=links_targets_array[source_id*average_links_number+i-1];
 				temp[2].target=target_id;
 
-				links_targets_array[threadIdx.x*average_links_number+i-1].target=(intptr_t)temp;   		// supplementary neighbors pointer is stored in last position
-				links_targets_array[threadIdx.x*average_links_number+i-2].target=-2;					//-2 is the marker that tell us that this node has allocated space for its neighbors list
+				links_targets_array[source_id*average_links_number+i-1].target=(intptr_t)temp;   		// supplementary neighbors pointer is stored in last position
+				links_targets_array[source_id*average_links_number+i-2].target=-2;					//-2 is the marker that tell us that this node has allocated space for its neighbors list
 				return 2;
 	}
 	else  								//supplementary space has been allocated previously
 	{
-		temp=(Link*)links_targets_array[threadIdx.x*average_links_number+i-1].target;
+		temp=(Link*)links_targets_array[source_id*average_links_number+i-1].target;
 
 		#pragma unroll
 		for(i=0;i<supplementary_links_array_size;i++)
@@ -170,6 +170,10 @@ __device__ inline void removeLink(uint16_t index)
 	links_targets_array[index].target=-1;
 }
 
+/*
+ * Remove a direct link from "node" to "node2"
+ */
+
 __device__ inline void removeLink(uint16_t node, uint16_t node2)
 {
 	Link* temp;
@@ -180,7 +184,7 @@ __device__ inline void removeLink(uint16_t node, uint16_t node2)
 
 		else if(links_targets_array[i].target == -2)
 		{
-		temp= (Link*)h_links_target_array[i+1].target;
+		temp= (Link*)links_targets_array[i+1].target;
 		for(uint32_t k = 0; k<supplementary_links_array_size ; k++)
 		{
 		if(temp[k].target == node2)
