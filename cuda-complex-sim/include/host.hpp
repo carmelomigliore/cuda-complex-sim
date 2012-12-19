@@ -107,4 +107,5 @@ __host__ void hostComputing(Link* links,bool* nodes,uint16_t supplementary_size,
 
 
 
+
 #endif /* HOST_HPP_ */

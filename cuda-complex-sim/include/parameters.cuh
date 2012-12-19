@@ -41,6 +41,9 @@ __constant__ uint32_t max_nodes_number;
 __constant__ uint8_t average_links_number;
 __constant__ uint16_t supplementary_links_array_size;
 __constant__ uint16_t message_queue_size;
+__constant__ bool* flagw;
+__constant__ bool* flagr;
+__constant__ uint32_t* dio;
 
 /* Nodes arrays addresses */
 __constant__ bool* nodes_array;
