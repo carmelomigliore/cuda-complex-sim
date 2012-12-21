@@ -119,13 +119,14 @@ __host__ inline void copyFromDevice(T* h_target,T* d_source,int32_t start, int32
  * Used to allocate memory (Device) for User Attribute's Array
  */
 template <typename T>
-__host__ inline void initAttrArray(T* usr_array){
+__host__ inline void initAttrArray(T** usr_array){
 	if(cudaMalloc((void**)usr_array,h_max_nodes_number*sizeof(T))!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device";
 		}
 	if(cudaMemcpyToSymbol(nodes_userattr_array, usr_array, sizeof(T*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device";
 		}
+	printf("\nAllocates attr %d", h_max_nodes_number*sizeof(T));
 }
 
 #endif /* TEMPLATES_CUH_ */

@@ -22,9 +22,7 @@
 #include "h_parameters.hpp"
 #include "h_templates.hpp"
 #include "templates.cuh"
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/variate_generator.hpp>
+#include "h_barabasi_game.hpp"
 
 /*
  * User Defined attribute
@@ -36,23 +34,21 @@ typedef struct coordinates{
 /*
  * Used to generate random coordinates
  */
-__host__ void generatesCoordinates(coord* t)
+__host__ void generatesCoordinates()
 {
 	coord temp;
-	boost::mt19937 gen;
-	unsigned int rseed = static_cast<unsigned int>(time(0));
-	gen.seed(static_cast<unsigned int>(rseed));
-	boost::uniform_int<> dist(0, 2000000);
-	boost::variate_generator<boost::mt19937&, boost::uniform_int<> > die(gen, dist);
 
 	h_initAttrArray<coord>();
-	initAttrArray<coord>(t);
+	srand(time(NULL));
 
 for(uint32_t i=0; i< h_max_nodes_number; i++)
 {
-	temp.c.x = die();
-	temp.c.y= die();
-	addAttribute<coord>(temp,i);
+	if(h_nodes_array[i] != -1)
+	{
+		temp.c.x = rand() % 1000;
+		temp.c.y= rand() % 1000;
+		addAttribute<coord>(temp,i);
+	}
 }
 
 

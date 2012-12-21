@@ -141,7 +141,8 @@ __host__ void copySupplementaryArrayFromDevice()
  */
 
 
-__host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, task_t** task_dev, task_arguments** task_args_dev, Link** links_target_dev, message_t** inbox_dev, uint32_t max_nodes, uint8_t avg_links, uint16_t supplementary_size, curandState** d_state/*, uint32_t** barabasi_links, uint16_t barabasi_initial_nodes*/,bool** flagw_array,bool** flagr_array,uint32_t** counter){
+__host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, task_t** task_dev, task_arguments** task_args_dev, Link** links_target_dev, message_t** inbox_dev, uint32_t max_nodes, uint8_t avg_links, uint16_t supplementary_size, curandState** d_state/*, uint32_t** barabasi_links, uint16_t barabasi_initial_nodes*/,uint32_t** mr_array,int32_t** counter)
+{
 
 	/* allocate nodes array */
 
@@ -171,7 +172,8 @@ __host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, tas
 
 	/* allocate links arrays */
 
-	if(cudaMalloc((void**)links_target_dev, max_nodes*avg_links*sizeof(Link))!=cudaSuccess){
+	if(cudaMalloc((void**)links_target_dev, max_nodes*avg_links*sizeof(Link))!=cudaSuccess)
+	{
 		cerr << "\nCouldn't allocate memory on device 5";
 		return false;
 	}
@@ -196,19 +198,15 @@ __host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, tas
 		return false;
 	}
 
-	/* Allocate flag array */
+	/* Allocate mutex array */
 
-	if(cudaMalloc((void**)flagw_array,max_nodes*sizeof(bool))!=cudaSuccess){
+	if(cudaMalloc((void**)mr_array,max_nodes*sizeof(uint32_t))!=cudaSuccess)
+	{
 			cerr << "\nCouldn't allocate memory on device 11";
 			return false;
-		}
+	}
 
-	if(cudaMalloc((void**)flagr_array,max_nodes*sizeof(bool))!=cudaSuccess){
-				cerr << "\nCouldn't allocate memory on device 12";
-				return false;
-			}
-
-	if(cudaMalloc((void**)counter,max_nodes*sizeof(uint32_t))!=cudaSuccess){
+	if(cudaMalloc((void**)counter,max_nodes*sizeof(int32_t))!=cudaSuccess){
 				cerr << "\nCouldn't allocate memory on device 13";
 				return false;
 			}
@@ -251,17 +249,14 @@ __host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, tas
 		return false;
 	}
 
-	if(cudaMemcpyToSymbol(flagw, flagw_array, sizeof(n_attribute*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+	if(cudaMemcpyToSymbol(mutex_array, mr_array, sizeof(uint32_t*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device";
 			return false;
 		}
 
-	if(cudaMemcpyToSymbol(flagr, flagr_array, sizeof(n_attribute*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
-			cerr << "\nCouldn't allocate memory on device";
-			return false;
-		}
 
-	if(cudaMemcpyToSymbol(dio, counter, sizeof(n_attribute*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
+
+	if(cudaMemcpyToSymbol(dio, counter, sizeof(bool*),0,cudaMemcpyHostToDevice)!=cudaSuccess){
 			cerr << "\nCouldn't allocate memory on device";
 			return false;
 		}
@@ -395,6 +390,8 @@ __global__ void init_data()
 			initArray<bool>(false,nodes_array,max_nodes_number);
 			initArray<Link>(init, links_targets_array, max_nodes_number*average_links_number);
 			//initArray<task_t>(NULL, task_array, max_nodes_number);
+			initArray<uint32_t>(0,mutex_array,max_nodes_number);
+			initArray<int32_t>(0,dio,max_nodes_number);
 
 			__syncthreads();
 

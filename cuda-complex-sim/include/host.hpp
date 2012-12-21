@@ -29,6 +29,7 @@
 #include "h_templates.hpp"
 #include "graph_transf.hpp"
 #include "device.cuh"
+#include "attributes.hpp"
 
 using namespace std;
 
@@ -105,6 +106,21 @@ __host__ void hostComputing(Link* links,bool* nodes,uint16_t supplementary_size,
 
 }
 
+__host__ void stampahost()
+{
+	/*for(uint32_t i = 0; i<5000;i++)
+				{
+					printf("cordinata x %f ",((coord*)(h_nodes_userattr_array))[i].c.x);
+					printf("coordinata y %f\n",((coord*)(h_nodes_userattr_array))[i].c.y);
+				}*/
+
+				for(uint32_t j = 0; j<200*h_average_links_number;j++)
+				{
+				printf("H: link[%d]= %d\n",j,h_links_target_array[j].target);
+				}
+
+
+}
 
 
 

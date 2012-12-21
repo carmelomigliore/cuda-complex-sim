@@ -20,12 +20,19 @@
 #define H_BARABASI_GAME_HPP_
 
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int.hpp>
+#include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 #include "graph_transf.hpp"
 #include "h_parameters.hpp"
 #include "h_templates.hpp"
 #include "h_link.hpp"
+
+
+double random01(mt19937 generator)
+{
+    static uniform_01<mt19937> dist(generator);
+    return dist();
+}
 
 /* Generates a scale-free network using Barabasi's algorithm
  * It returns the generated graph
@@ -44,9 +51,7 @@ __host__ Graph h_barabasi_game(uint16_t initial_nodes, uint16_t links_number, ui
 					return false;
 		}
 
-	boost::mt19937 gen;
-	unsigned int rseed = static_cast<unsigned int>(time(0));
-	gen.seed(static_cast<unsigned int>(rseed));
+	mt19937 generator(time(0));
 
 
 		Graph g;
@@ -87,8 +92,7 @@ __host__ Graph h_barabasi_game(uint16_t initial_nodes, uint16_t links_number, ui
 		uint32_t random;
 		uint32_t random_node;
 		bool flag;
-		boost::uniform_int<> dist(0, counter);
-		boost::variate_generator<boost::mt19937&, boost::uniform_int<> > die(gen, dist);
+
 		for(i=initial_nodes; i< max_nodes; i++)
 		{
 			add_vertex(g);
@@ -96,12 +100,14 @@ __host__ Graph h_barabasi_game(uint16_t initial_nodes, uint16_t links_number, ui
 			{
 				flag=true;
 
+
 				/* Let's see to what node the variable random corresponds,
 				 * and if it is not already linked, link it. Otherwise, generates a new number.
 				 */
 				while(flag)
 				{
-					random = die();		//generates a number between 0 and counter
+
+					random = (uint32_t)(random01(generator)*counter)%counter;		//generates a number between 0 and counter
 					random_node=h_links_linearized_array[random];
 					if (!(edge(i,random_node,g).second) && random_node!=i)
 					{

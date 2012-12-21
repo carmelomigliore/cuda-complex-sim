@@ -62,7 +62,7 @@ __device__ inline bool isLinked(int32_t node, uint32_t target)
 		}
 		else if(links_targets_array[i].target == -2)
 		{
-			temp= (Link*)links_targets_array[i+1].target;
+			temp= (Link*)(links_targets_array[i+1].target);
 			for(uint16_t k=0; k<supplementary_links_array_size;k++)
 			{
 				if(temp[k].target == target)
@@ -126,6 +126,14 @@ __device__ inline uint8_t addLink2(int32_t source_id, int32_t target_id)
 	{
 		temp = (Link*)malloc(supplementary_links_array_size*sizeof(Link));
 
+			if(temp==NULL)
+			{
+			printf("ciao1");
+			printf("ciao2");
+			return 17;
+			}
+			else{
+
 				/* Initializes the supplementary array to -1 */
 
 				uint16_t j=0;
@@ -147,6 +155,7 @@ __device__ inline uint8_t addLink2(int32_t source_id, int32_t target_id)
 				links_targets_array[source_id*average_links_number+i-1].target=(intptr_t)temp;   		// supplementary neighbors pointer is stored in last position
 				links_targets_array[source_id*average_links_number+i-2].target=-2;					//-2 is the marker that tell us that this node has allocated space for its neighbors list
 				return 2;
+	}
 	}
 	else  								//supplementary space has been allocated previously
 	{
