@@ -50,7 +50,7 @@ __device__ bool isContained(uint32_t val, int32_t* array, uint32_t size)
 
 __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 {
-	uint8_t maxiter=2;
+	uint8_t maxiter=1;
 	for(uint8_t y=0; y<maxiter; y++)
 	{
 	uint32_t f=0;
@@ -349,7 +349,7 @@ for(uint32_t a=0; a<pippo;a++)
 
 if(flages)
 	{
-		if(y>=2)
+	//	if(y>=2)
 		printf("Return %d\n",y);
 	return;
 
@@ -469,7 +469,7 @@ if(flages)
 		free(n_array);
 		free(mn_array);
 		free(nc);
-		if(y>=2)
+	//	if(y>=2)
 		printf("Fine Hygra %d\n",y);
 
 }

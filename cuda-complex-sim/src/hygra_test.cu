@@ -39,6 +39,7 @@ int main(int argc, char** argv)
 		curandState *d_state;
 		coord* attr_array;
 
+
 //		if (argc!=3)
 	//		{
 //				perror("\nErrore");
@@ -66,14 +67,32 @@ int main(int argc, char** argv)
 	copyToDevice(attr_array,(coord*)h_nodes_userattr_array,0,max_nodes);
 	startSimulation(links_target_dev,nodes_dev,supplementary_size,g);
 
-printf("\nentro");
-	sleep(2);
-printf("\nesco\n");
+	size_t avail;
+	size_t total;
+	cudaMemGetInfo( &avail, &total );
+	size_t used = total - avail;
+	printf("\nMemoria: totale %d, in uso %d, disponibile: %d", total, used, avail);
 
-//	stampadio();
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	// Start record
+	cudaEventRecord(start, 0);
 
-	//stampa<<<1,1>>>();
-	hygra<<<2,32>>>(6);
+	hygra<<<1,64>>>(6);
+
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	float elapsedTime;
+	cudaEventElapsedTime(&elapsedTime, start, stop); // that's our time!
+	// Clean up:
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);
+	FILE *file;
+	file=fopen("hygra_times.txt","a");
+	fprintf(file, "%f\n",elapsedTime);
+	fflush(file);
+	fclose(file);
 
 	cudaThreadExit();
 
