@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
 
 
-	uint32_t max_nodes = 10000;
+	uint32_t max_nodes = 1000;
 	uint8_t average_links= 6;
 	uint16_t barabasi_initial_nodes=2;
 
@@ -93,6 +93,8 @@ int main(int argc, char** argv)
 	fprintf(file, "%f\n",elapsedTime);
 	fflush(file);
 	fclose(file);
+
+	printf("\nfinito");
 
 	cudaThreadExit();
 

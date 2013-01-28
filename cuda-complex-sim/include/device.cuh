@@ -143,7 +143,6 @@ __host__ void copySupplementaryArrayFromDevice()
 
 __host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, task_t** task_dev, task_arguments** task_args_dev, Link** links_target_dev, message_t** inbox_dev, uint32_t max_nodes, uint8_t avg_links, uint16_t supplementary_size, curandState** d_state/*, uint32_t** barabasi_links, uint16_t barabasi_initial_nodes*/,uint32_t** mr_array,int32_t** counter)
 {
-
 	/* allocate nodes array */
 
 	if(cudaMalloc((void**)pr_attr,max_nodes*sizeof(n_attribute))!=cudaSuccess){
@@ -240,6 +239,7 @@ __host__ bool allocateDataStructures(n_attribute** pr_attr,bool** nodes_dev, tas
 		cerr << "\nCouldn't allocate memory on device";
 		return false;
 	} */
+
 
 
 	/* copy arrays' addresses to device memory */

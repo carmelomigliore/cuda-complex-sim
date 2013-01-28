@@ -87,11 +87,13 @@ __host__ void startSimulation(Link* links,bool* nodes,uint16_t supplementary_siz
 	Link init;
 	init.target=-1;
 	init_data<<<BLOCKS,THREADS_PER_BLOCK>>>();
+	cudaMemcpy(&global_mutex,0,(sizeof(uint32_t)), cudaMemcpyHostToDevice);  // inizializza il global mutex a 0
 	h_initArray<bool>(false,h_nodes_array,h_max_nodes_number);
 	h_initArray<Link>(init, h_links_target_array, h_max_nodes_number*h_average_links_number);
 	adjlistToCompactList(g);
 	copyToDevice(nodes,h_nodes_array , 0, h_max_nodes_number );
 	copyToDevice(links,h_links_target_array ,0, h_max_nodes_number*h_average_links_number );
+	//copySupplementaryArrayToDevice(links);
 }
 
 /*
@@ -102,6 +104,7 @@ __host__ void hostComputing(Link* links,bool* nodes,uint16_t supplementary_size,
 {
 	copyFromDevice(h_nodes_array,nodes, 0, h_max_nodes_number );
 	copyFromDevice(h_links_target_array ,links,0, h_max_nodes_number*h_average_links_number );
+	//copySupplementaryArrayFromDevice();
 	CompactListToAdjList(&g);
 
 }

@@ -38,6 +38,10 @@ __device__ void unlock(uint32_t *pmutex)
     atomicExch(pmutex, 0);
 }
 
+__device__ int nonBlockingLock(uint32_t *pmutex){
+return (atomicCAS(pmutex, 0, 1) != 0);
+}
+
 __device__ bool isContained(uint32_t val, int32_t* array, uint32_t size)
 {
 	for(uint16_t i=0; i< size; i++)
@@ -65,13 +69,16 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 	Link* temp;
 	Link* temp2;
 	uint32_t pippo;
+	bool done = false;
+	uint32_t l = 0;
+
+	lock(&global_mutex); // va in deadlock immediatamente qui
 
 
+	while(!done)
+	{
+		lock(&mutex_array[this_node]);
 
-
-
-				if(atomicAdd(&(dio[this_node]),1)==0)   //contatore dei lettori
-				lock(&mutex_array[this_node]);
 
 
 
@@ -82,8 +89,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 				neigh = links_targets_array[j].target;
 				count_neigh++;
 
-				if(atomicAdd(&(dio[neigh]),1)==0)
-				lock(&mutex_array[neigh]);
+
 
 
 				for(uint32_t k=neigh*average_links_number; k<(neigh+1)*average_links_number; k++)
@@ -105,8 +111,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 						break;
 					}
 				}
-			if(atomicSub(&(dio[neigh]),1)==1)
-				unlock(&mutex_array[neigh]);
+
 			}
 			else if(links_targets_array[j].target == -2)
 			{
@@ -118,8 +123,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 						neigh = temp[i].target;
 						count_neigh++;
 
-						if(atomicAdd(&(dio[neigh]),1)==0)
-					    lock(&mutex_array[neigh]);
+
 
 
 						for(uint32_t s=neigh*average_links_number; s<(neigh+1)*average_links_number; s++)
@@ -143,8 +147,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 							}
 						}
 
-						if(atomicSub(&(dio[neigh]),1)==1)
-						unlock(&mutex_array[neigh]);
+
 					}
 				}
 
@@ -154,8 +157,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 			}
 
 
-		if(atomicSub(&(dio[this_node]),1)==1)
-			unlock(&mutex_array[this_node]);
+
 
 
 		mn_array=(var*)malloc(count_mneigh*sizeof(var));
@@ -164,8 +166,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 
 
 
-		if(atomicAdd(&(dio[this_node]),1)==0)
-		lock(&mutex_array[this_node]);
+
 
 		for(uint32_t j=this_node*average_links_number; j<(this_node+1)*average_links_number; j++)
 		{
@@ -176,8 +177,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 				nc[q]= neigh;
 				q++;
 
-				if(atomicAdd(&(dio[neigh]),1)==0)
-				lock(&mutex_array[neigh]);
+
 
 				for(uint32_t k=neigh*average_links_number; k<(neigh+1)*average_links_number; k++)
 				{
@@ -213,8 +213,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 					}
 
 				}
-				if(atomicSub(&(dio[neigh]),1)==1)
-				unlock(&mutex_array[neigh]);
+
 
 
 			}
@@ -231,8 +230,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 						nc[q]= neigh;
 						q++;
 
-						if(atomicAdd(&(dio[neigh]),1)==0)
-						lock(&mutex_array[neigh]);
+
 
 						for(uint32_t s=neigh*average_links_number; s<(neigh+1)*average_links_number; s++)
 						{
@@ -262,8 +260,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 							}
 						}
 
-						if(atomicSub(&(dio[neigh]),1)==1)
-						unlock(&mutex_array[neigh]);
+
 					}
 				}
 				break;
@@ -273,8 +270,34 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 
 		 }
 
-	if(atomicSub(&(dio[this_node]),1)==1)
-		unlock(&mutex_array[this_node]);
+		for(l =0; l<count_mneigh; l++)
+		{
+			if(!nonBlockingLock(&mutex_array[mn_array[l].node]))
+			{
+				  for(uint32_t o=0; o< l-1;o++)
+					 unlock(&mutex_array[mn_array[o].node]);
+
+					 break;
+
+
+			}
+		}
+		if(l<count_mneigh-1)
+		{
+		  done = false;
+		  unlock(&mutex_array[this_node]);
+
+		}
+
+		else
+		  done = true;
+
+	} //end while
+
+		unlock(&global_mutex);
+
+
+
 
 //if 1/2 neighbors < deg trg, then connect "this_node" with all 1/2 neighbors in mn_array (if this_node is not yet linking them)
 
@@ -282,7 +305,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 		if(count_mneigh < degtrg)
 		{
 
-			lock(&mutex_array[this_node]);
+
 			for(uint32_t p=0; p<count_mneigh;p++)
 			{
 				if(!isLinked(this_node,mn_array[p].node))
@@ -293,7 +316,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 
 			}
 			pippo = count_mneigh;
-			unlock(&mutex_array[this_node]);
+
 
 
 
@@ -317,7 +340,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 			}
 
 
-			lock(&mutex_array[this_node]);
+
 			for(uint32_t j=0; j<degtrg;j++)
 			{
 				if(!isLinked(this_node,mn_array[j].node))
@@ -328,7 +351,7 @@ __device__ void clustering(uint32_t degtrg,uint32_t this_node )
 
 			}
 			pippo = degtrg;
-			unlock(&mutex_array[this_node]);
+
 
 
 
@@ -350,7 +373,7 @@ for(uint32_t a=0; a<pippo;a++)
 if(flages)
 	{
 	//	if(y>=2)
-		printf("Return %d\n",y);
+	//	printf("Return %d\n",y);
 	return;
 
 	}
@@ -371,8 +394,7 @@ if(flages)
 		for(uint16_t p=0; p<pippo;p++)
 		{
 
-			if(atomicAdd(&(dio[mn_array[p].node]),1)==0)
-			lock(&mutex_array[mn_array[p].node]);
+
 
 			for(uint32_t k=mn_array[p].node*average_links_number; k<(neigh+1)*average_links_number; k++)
 			{
@@ -404,8 +426,7 @@ if(flages)
 			}
 
 
-			if(atomicSub(&(dio[mn_array[p].node]),1)==1)
-			unlock(&mutex_array[mn_array[p].node]);
+
 
 
 		}
@@ -413,8 +434,7 @@ if(flages)
 //Reducing Critical Neighbors to Essentially Critical Neighbors
 		for(uint32_t r=0; r< count_neigh; r++)
 		{
-			if(atomicAdd(&(dio[nc[r]]),1)==0)
-			lock(&mutex_array[nc[r]]);
+
 
 			for(uint32_t p=0; p<count_neigh; p++)
 			{
@@ -423,8 +443,7 @@ if(flages)
 
 			}
 
-		if(atomicSub(&(dio[nc[r]]),1)==1)
-			unlock(&mutex_array[nc[r]]);
+
 		}
 
 /*
@@ -454,7 +473,7 @@ if(flages)
 		}
 
 
-		lock(&mutex_array[this_node]);
+
 		for(uint32_t b=0; b<count_neigh;b++)
 		{
 			if(n_array[b] != -1)
@@ -464,13 +483,21 @@ if(flages)
 
 
 		}
-		unlock(&mutex_array[this_node]);
+
 
 		free(n_array);
 		free(mn_array);
 		free(nc);
 	//	if(y>=2)
-		printf("Fine Hygra %d\n",y);
+	//	printf("Fine Hygra %d\n",y);
+
+
+		for (uint32_t i = 0; i< count_mneigh-1;i++)
+		{
+		    unlock(&mutex_array[mn_array[i].node]);
+		}
+
+		unlock(&mutex_array[this_node]);
 
 }
 }
